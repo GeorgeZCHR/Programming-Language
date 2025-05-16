@@ -1,0 +1,99 @@
+// Test General
+/*int num1 = 100;
+float num2 = 33.33;
+long int num3 = 3000000000;
+bool stmt = true;
+string name = "geo";
+print all
+
+int a1 = num1;
+int a2 = num2;
+int a3 = num3;
+int a4 = stmt;
+int a5 = name;
+print int
+
+a1 = 100;
+a2 = 33.33;
+a3 = 3000000000;
+a4 = true;
+a5 = "geo";
+print int
+
+float b1 = num1;
+float b2 = num2;
+float b3 = num3;
+float b4 = stmt;
+float b5 = name;
+print float
+
+b1 = 100;
+b2 = 33.33;
+b3 = 3000000000;
+b4 = true;
+b5 = "geo";
+print float
+
+long int c1 = num1;
+long int c2 = num2;
+long int c3 = num3;
+long int c4 = stmt;
+long int c5 = name;
+print long int
+
+c1 = 100;
+c2 = 33.33;
+c3 = 3000000000;
+c4 = true;
+c5 = "geo";
+print long int
+
+bool d1 = num1;
+bool d2 = num2;
+bool d3 = num3;
+bool d4 = stmt;
+bool d5 = name;
+print bool
+
+d1 = 100;
+d2 = 33.33;
+d3 = 3000000000;
+d4 = true;
+d5 = "geo";
+print bool
+
+string e1 = num1;
+string e2 = num2;
+string e3 = num3;
+string e4 = stmt;
+string e5 = name;
+print string
+
+e1 = 100;
+e2 = 33.33;
+e3 = 3000000000;
+e4 = true;
+e5 = "geo";
+print string*/
+
+// Test Bool
+bool a = 100;
+bool b = 100.2;
+bool c = 3000000000;
+bool d = true;
+bool e = "true";
+print bool
+
+int a1 = 100;
+float b1 = 100.2;
+long int c1 = 3000000000;
+bool d1 = true;
+string e1 = "true";
+a = a1;
+b =  b1;
+c = c1;
+d = d1;
+e = e1;
+print bool
+
+exit

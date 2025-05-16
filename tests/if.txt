@@ -1,0 +1,178 @@
+// If stmts       correct
+/*
+print("if(true) { int a1; }");
+if(true) { int a1; }
+print("if(false) { int a2; }");
+if(false) { int a2; }
+print int
+*/
+
+// If else stmts      correct
+/*
+print("if(true) { int a3; } else { int a4; }");
+if(true) { int a3; } else { int a4; }
+
+print("if(false) { int a5; } else { int a6; }");
+if(false) { int a5; } else { int a6; }
+print int
+*/
+
+// If { if } stmts      correct
+/*
+print("if(true) { if(true) { int a7; } }");
+if(true) { if(true) { int a7; } }
+
+print("if(true) { if(false) { int a8; } }");
+if(true) { if(false) { int a8; } }
+
+print("if(false) { if(true) { int a9; } }");
+if(false) { if(true) { int a9; } }
+
+print("if(false) { if(false) { int a10; } }");
+if(false) { if(false) { int a10; } }
+print int
+*/
+
+// If { if } else stmts     correct
+/*
+print("if(true) { if(true) { int a11; } } else { int a12; }");
+if(true) { if(true) { int a11; } } else { int a12; }
+
+print("if(true) { if(false) { int a13; } } else { int a14; }");
+if(true) { if(false) { int a13; } } else { int a14; }
+
+print("if(false) { if(true) { int a15; } } else { int a16; }");
+if(false) { if(true) { int a15; } } else { int a16; }
+
+print("if(false) { if(false) { int a17; } } else { int a18; }");
+if(false) { if(false) { int a17; } } else { int a18; }
+print int
+*/
+
+// If { if else } stmts      correct
+/*
+print("if(true) { if(true) { int a19; } else { int a20; } }");
+if(true) { if(true) { int a19; } else { int a20; } }
+
+print("if(true) { if(false) { int a21; } else { int a22; } }");
+if(true) { if(false) { int a21; } else { int a22; } }
+
+print("if(false) { if(true) { int a23; } else { int a24; } }");
+if(false) { if(true) { int a23; } else { int a24; } }
+
+print("if(false) { if(false) { int a25; } else { int a26; } }");
+if(false) { if(false) { int a25; } else { int a26; } }
+print int
+*/
+
+
+// If { if else } else stmts      correct
+/*
+print("if(true) { if(true) { int a27; } else { int a28; } } else { int a29;}");
+if(true) { if(true) { int a27; } else { int a28; } } else { int a29;}
+
+print("if(true) { if(false) { int a30; } else { int a31; } } else { int a32;}");
+if(true) { if(false) { int a30; } else { int a31; } } else { int a32;}
+
+print("if(false) { if(true) { int a33; } else { int a34; } } else { int a35;}");
+if(false) { if(true) { int a33; } else { int a34; } } else { int a35;}
+
+print("if(false) { if(false) { int a36; } else { int a37; } } else { int a38;}");
+if(false) { if(false) { int a36; } else { int a37; } } else { int a38;}
+print int
+*/
+
+
+// If { if else } else { if else } stmts    correct
+/*
+print("if(true) { if(true) { int a39; } else { int a40; } } else { if(true) { int a41; } else { int a42; } }");
+if(true) { if(true) { int a39; } else { int a40; } } else { if(true) { int a41; } else { int a42; } }
+
+print("if(true) { if(false) { int a43; } else { int a44; } } else { if(true) { int a45; } else { int a46; } }");
+if(true) { if(false) { int a43; } else { int a44; } } else { if(true) { int a45; } else { int a46; } }
+
+print("if(true) { if(true) { int a47; } else { int a48; } } else { if(false) { int a49; } else { int a50; } }");
+if(true) { if(true) { int a47; } else { int a48; } } else { if(false) { int a49; } else { int a50; } }
+
+print("if(true) { if(false) { int a51; } else { int a52; } } else { if(false) { int a53; } else { int a54; } }");
+if(true) { if(false) { int a51; } else { int a52; } } else { if(false) { int a53; } else { int a54; } }
+
+print("if(false) { if(true) { int a55; } else { int a56; } } else { if(true) { int a57; } else { int a58; } }");
+if(false) { if(true) { int a55; } else { int a56; } } else { if(true) { int a57; } else { int a58; } }
+
+print("if(false) { if(false) { int a59; } else { int a60; } } else { if(true) { int a61; } else { int a62; } }");
+if(false) { if(false) { int a59; } else { int a60; } } else { if(true) { int a61; } else { int a62; } }
+
+print("if(false) { if(true) { int a63; } else { int a64; } } else { if(false) { int a65; } else { int a66; } }");
+if(false) { if(true) { int a63; } else { int a64; } } else { if(false) { int a65; } else { int a66; } }
+
+print("if(false) { if(false) { int a67; } else { int a68; } } else { if(false) { int a69; } else { int a70; } }");
+if(false) { if(false) { int a67; } else { int a68; } } else { if(false) { int a69; } else { int a70; } }
+print int
+*/
+
+
+// If else { if { if else } else { if else } } stmts     wrong
+/*
+print("if(true) { int a71; }\n
+else {\n
+\tif(true) { if(true) { int a72; } else { int a73; } }\n
+\telse { if(true) { int a74; } else { int a75; } }\n}");
+
+if(true) { int a71; }
+else {
+        if(true) { if(true) { int a72; } else { int a73; } }
+        else { if(true) { int a74; } else { int a75; } }
+}
+
+print("if(false) { int a76; }\n
+else {\n
+\tif(true) { if(true) { int a77; } else { int a78; } }\n
+\telse { if(true) { int a79; } else { int a80; } }\n}");
+
+if(false) { int a76; }
+else {
+        if(true) { if(true) { int a77; } else { int a78; } }
+        else { if(true) { int a79; } else { int a80; } }
+}
+
+print("if(false) { int a81; }\n
+else {\n
+\tif(false) { if(true) { int a82; } else { int a83; } }\n
+\telse { if(true) { int a84; } else { int a85; } }\n}");
+
+if(false) { int a81; }
+else {
+        if(false) { if(true) { int a82; } else { int a83; } }
+        else { if(true) { int a84; } else { int a85; } }
+}
+
+print("if(false) { int a86; }\n
+else {\n
+\tif(false) { if(false) { int a87; } else { int a88; } }\n
+\telse { if(true) { int a89; } else { int a90; } }\n}");
+if(false) { int a86; }
+else {
+        if(false) { if(false) { int a87; } else { int a88; } }
+        else { if(true) { int a89; } else { int a90; } }
+}
+print int
+*/
+
+// If else { if  else } stmts     wrong
+
+print("if(true) { int a91; } else { if(true) { int a92; } else { int a93; } }");
+if(true) { int a91; } else { if(true) { int a92; } else { int a93; } }
+
+print("if(true) { int a94; } else { if(false) { int a95; } else { int a96; } }");
+if(true) { int a94; } else { if(false) { int a95; } else { int a96; } }
+
+print("if(false) { int a97; } else { if(true) { int a98; } else { int a99; } }");
+if(false) { int a97; } else { if(true) { int a98; } else { int a99; } }
+
+print("if(false) { int a100; } else { if(false) { int a101; } else { int a102; } }");
+if(false) { int a100; } else { if(false) { int a101; } else { int a102; } }
+print int
+
+
+exit

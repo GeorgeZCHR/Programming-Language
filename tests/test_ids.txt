@@ -1,0 +1,62 @@
+// There are a lot of test just comment or uncomment what you want to test or
+// create your own tests
+
+// Test 1
+/*
+int a = 10, b = 20; print int a = b; print int
+float c = 33.44f, d = 50.55f; print float c = d; print float
+long int e = 3000000000, f = 20; print long int e = f; print long int
+*/
+
+// Test 2
+
+int a = 10, a1 = 100, a2 = 1000, a3 = 10000;
+float b = 55.55, b1 = 22.4567, b2 = 776.23, b3 = 865.76;
+long int c = 3000000000, c1 = 0,c2 = 10, c3 = 30;
+print all
+
+/*a1=a2=a3=a;
+b1=b2=b3 = b;
+c1 = c2 = c3 = c;
+print all*/
+
+a3 = a + a1 + a2;
+b3 = b + b1 + b2;
+c3 = c + c1 + c2;
+print all
+
+/*
+print int
+//a = a;
+//a = b;
+//a = c;
+print int
+*/
+/*
+print float
+//b = a;
+//b = b;
+//b = c;
+print float
+*/
+/*
+print long int
+//c = a;
+//c = b;
+//c = c;
+print long int
+*/
+
+// Test 3
+
+/*int a = 10, b = 20;
+a=b;
+print a
+int c = b;
+print c
+print b
+int d = 100;
+a = b = c = d;
+print int
+d = a * (b-a*2) + d;
+print d*/
