@@ -1,0 +1,99 @@
+/*string a = "hello there", b = "ha", name = "George";
+string c = "Oh my god it works", d = "!@#$%^&*()_+-={}[]|:\;'<>,.?/~`";
+//string e = "My name is " + name + " and I am " + 22 + " years old!";
+string e = "My name is " + name;
+print string
+b = a;
+print string
+b = c;
+print string
+b = "geo" + " and I";
+print string
+c = 1;
+print string*/
+
+// Test 1
+
+/*int num1 = 2;
+float num2 = 33.33;
+long int num3 = 3000000000;
+string name = "George", phrase = "My name is " + name + ", and I am " + 2 + num1 + " years old!";
+print string
+
+name = name + name;
+string numbers = "int : " + num1 + ", float : " + num2 + ", long int : " + num3;
+print string*/
+
+// Test 2
+
+/*string name = "Geo";
+string c = name(0);
+print c
+c = name(1);
+print c
+c = name(2);
+print c
+c = name(-1);
+print c
+c = name(-2);
+print c
+c = name(-3);
+print c
+c = name(-4);
+print c
+c = name(3);
+print c
+c = name(4);
+print c
+c = name(5);
+print c
+c = name(6);
+print c*/
+
+// Test 3
+
+/*string name = "Geo";
+string str1 = name(0:0);
+string str2 = name(0:1);
+string str3 = name(0:2);
+
+string str4 = name(0:3);
+string str5 = name(0:4);
+string str6 = name(0:5);
+
+string str7 = name(0:-1);
+string str8 = name(0:-2);
+string str9 = name(0:-3);
+
+string str10 = name(0:-4);
+string str11 = name(0:-5);
+string str12 = name(0:-6);
+
+string str13 = name(-1:0);
+string str14 = name(-2:0);
+string str15 = name(-3:0);
+
+string str16 = name(-1:0);
+string str17 = name(-4:0);
+string str18 = name(-7:0);
+print string*/
+
+// Test 4
+
+string name = "George";
+string str1 = name(:);
+
+string str2 = name(:0);
+string str3 = name(:5);
+string str4 = name(:6);
+string str5 = name(:-1);
+string str6 = name(:-2);
+
+string str7 = name(0:);
+string str8 = name(5:);
+string str9 = name(6:);
+string str10 = name(-1:);
+string str11 = name(-2:);
+print string
+
+exit

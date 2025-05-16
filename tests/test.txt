@@ -1,0 +1,3 @@
+string name = "George";
+print("Hello " + name);
+exit
