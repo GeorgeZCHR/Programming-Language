@@ -41,14 +41,21 @@ void intAssignment(char* id, int value) {
     if(problem) free(id);
     else if(peekInt(ifSkipBlockStack)) free(id);
     else {
-        int res = appendInt(id, value); if(res == 0) free(id);
+        int res = appendInt(id, value);
+        if(res == 0) free(id);
         else if(res == 1) {
-            problem = 1; char error[100] = "allready declared ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared ");
+            concat(errorMes, id);
+            free(id);
+            yyerror(error);
         }
         else {
-            problem = 1; char error[130] = "allready declared (in different type) ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared (in different type) ");
+            concat(errorMes,id);
+            free(id);
+            yyerror(error);
         }
     }
 }
@@ -57,14 +64,21 @@ void floatAssignment(char* id, float value) {
     if(problem) free(id);
     else if(peekInt(ifSkipBlockStack)) free(id);
     else {
-        int res = appendFloat(id, value); if(res == 0) free(id);
+        int res = appendFloat(id, value);
+        if(res == 0) free(id);
         else if(res == 1) {
-            problem = 1; char error[100] = "allready declared ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared ");
+            concat(errorMes, id);
+            free(id);
+            yyerror(error);
         }
         else {
-            problem = 1; char error[130] = "allready declared (in different type) ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared (in different type) ");
+            concat(errorMes,id);
+            free(id);
+            yyerror(error);
         }
     }
 }
@@ -73,14 +87,21 @@ void longIntAssignment(char* id, long int value) {
     if(problem) free(id);
     else if(peekInt(ifSkipBlockStack)) free(id);
     else {
-        int res = appendLongInt(id, value); if(res == 0) free(id);
+        int res = appendLongInt(id, value);
+        if(res == 0) free(id);
         else if(res == 1) {
-            problem = 1; char error[100] = "allready declared ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared ");
+            concat(errorMes, id);
+            free(id);
+            yyerror(error);
         }
         else {
-            problem = 1; char error[130] = "allready declared (in different type) ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared (in different type) ");
+            concat(errorMes,id);
+            free(id);
+            yyerror(error);
         }
     }
 }
@@ -89,14 +110,21 @@ void boolAssignment(char* id, int value) {
     if(problem) free(id);
     else if(peekInt(ifSkipBlockStack)) free(id);
     else {
-        int res = appendBool(id, value); if(res == 0) free(id);
+        int res = appendBool(id, value);
+        if(res == 0) free(id);
         else if(res == 1) {
-            problem = 1; char error[100] = "allready declared ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared ");
+            concat(errorMes, id);
+            free(id);
+            yyerror(error);
         }
         else {
-            problem = 1; char error[130] = "allready declared (in different type) ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared (in different type) ");
+            concat(errorMes,id);
+            free(id);
+            yyerror(error);
         }
     }
 }
@@ -105,14 +133,21 @@ void stringAssignment(char* id, char* value) {
     if(problem) free(id);
     else if(peekInt(ifSkipBlockStack)) { free(id); free(value); }
     else {
-        int res = appendString(id, value); if(res == 0) free(id);
+        int res = appendString(id, value);
+        if(res == 0) free(id);
         else if(res == 1) {
-            problem = 1; char error[100] = "allready declared ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared ");
+            concat(errorMes, id);
+            free(id);
+            yyerror(error);
         }
         else {
-            problem = 1; char error[130] = "allready declared (in different type) ";
-            strcat(error,id); free(id); yyerror(error);
+            problem = 1;
+            char* errorMes = str("allready declared (in different type) ");
+            concat(errorMes,id);
+            free(id);
+            yyerror(error);
         }
     }
 }
@@ -232,8 +267,7 @@ stmts:
 ;
 
 includeCode:
-    INCLUDE exprS
-    {
+    INCLUDE exprS {
         // this is a real mid-rule action!
         if (!parse_subfile($2)) {
             char error[256] = "file does not exist --- ";
@@ -244,42 +278,39 @@ includeCode:
         }
         free($2);
     }
-    {}
     stmts
 ;
 
 stmtWHILE:
-    WHILE LPAREN exprB RPAREN   {
-                                    if(checkPreviousWhiles()) {
-                                        pushInt(whileExprStack, $3);
-                                        if(peekInt(whileExprStack) == FALSE_VAL) skip_block = 1;
-                                        else loop = 1;
-                                    }
-                                    else skip_block = 1;
-
-                                } block stmts
+    WHILE LPAREN exprB RPAREN {
+        if(checkPreviousWhiles()) {
+            pushInt(whileExprStack, $3);
+            if(peekInt(whileExprStack) == FALSE_VAL) skip_block = 1;
+            else loop = 1;
+        }
+        else skip_block = 1;
+    } block stmts
 ;
 
 stmtIF:
-    IF LPAREN exprB RPAREN  {
-                                if(checkPreviousIfs()) {
-                                    pushInt(ifExprStack, $3);
-                                    if(peekInt(ifExprStack) == FALSE_VAL) skip_block = 1;
-                                }
-                                else skip_block = 1;
-
-                            } block else_stmts
+    IF LPAREN exprB RPAREN {
+        if(checkPreviousIfs()) {
+            pushInt(ifExprStack, $3);
+            if(peekInt(ifExprStack) == FALSE_VAL) skip_block = 1;
+        }
+        else skip_block = 1;
+    } block else_stmts
 ;
 
 else_stmts:
     end_if
-    | ELSE IF LPAREN exprB RPAREN   {
-                                        if(checkPreviousIfs()) { 
-                                            popAndPushInt(ifExprStack, $4);
-                                            if(peekInt(ifExprStack) == FALSE_VAL) skip_block = 1;
-                                        } else skip_block = 1;
 
-                                    } block else_stmts
+    | ELSE IF LPAREN exprB RPAREN {
+        if(checkPreviousIfs()) { 
+            popAndPushInt(ifExprStack, $4);
+            if(peekInt(ifExprStack) == FALSE_VAL) skip_block = 1;
+        } else skip_block = 1;
+    } block else_stmts
 
     | ELSE block end_if
 ;
@@ -312,9 +343,17 @@ spcl:
 ;
 
 errors:
-    ID ID ASSIGN assignmentErrors   { char error[120] = "wrong type "; strcat(error,$1);
-                                      free($1); free($2); free($4); yyerror(error); YYABORT; }
-    | ERROR                         { yyerror("syntax error"); YYABORT; }
+    ID ID ASSIGN assignmentErrors {
+        char* errorMes = str("wrong type ");
+        concat(&errorMes, $1);
+        free($1);
+        free($2);
+        free($4);
+        yyerror(errorMes);
+        YYABORT;
+    }
+
+    | ERROR { yyerror("syntax error"); YYABORT; }
 ;
 
 assignmentErrors:
@@ -328,28 +367,68 @@ assignmentErrors:
 ;
 
 printFunc:
-    PRINT LPAREN exprS RPAREN { if(problem) { free($3); YYABORT;        }
-                                else if(peekInt(ifSkipBlockStack)) free($3);
-                                else        { printf("%s%s%s\n", C_ORANGE, $3, C_RESET); free($3); } }
+    PRINT LPAREN exprS RPAREN {
+        if(problem) {
+            free($3);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) free($3);
+        else {
+            printf("%s%s%s\n", C_ORANGE, $3, C_RESET);
+            free($3);
+        }
+    }
 
 // if an undeclared id used then memory leak will occur surely except if i use some global var and every time check it
 // i did it only for int now i have to do it for float, long int, bool, string
 stmtI:
-    INT_ID ASSIGN exprI             { if(problem) { free($1); YYABORT;        }
-                                      else if(peekInt(ifSkipBlockStack)) free($1);
-                                      else        { setInt($1, $3); free($1); } }
+    INT_ID ASSIGN exprI {
+        if(problem) {
+            free($1);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) free($1);
+        else {
+            setInt($1, $3);
+            free($1);
+        }
+    }
 
-    | INT_ID ASSIGN idAssignmentsI  { if(problem) { free($1); free($3); YYABORT;              }
-                                      else if(peekInt(ifSkipBlockStack)) { free($1); free($3); }
-                                      else        { setVarFromId($1, $3); free($1); free($3); } }
+    | INT_ID ASSIGN idAssignmentsI {
+        if(problem) {
+            free($1);
+            free($3);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            free($1);
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            free($1);
+            free($3);
+        }
+    }
 
-    | ID ASSIGN idAssignmentsI      { char error[120] = "undeclared variable "; strcat(error,$1);
-                                      free($1); free($3); yyerror(error); YYABORT;                }
+    | ID ASSIGN idAssignmentsI {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        free($3);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | ID ASSIGN exprI               { char error[120] = "undeclared variable "; strcat(error,$1);
-                                      free($1); yyerror(error); YYABORT;                          }
+    | ID ASSIGN exprI {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(error);
+        YYABORT;
+    }
 
-    | INT declareListI              { if(problem) YYABORT; }
+    | INT declareListI { if(problem) YYABORT; }
 ;
 
 declareListI:
@@ -358,48 +437,119 @@ declareListI:
 ;
 
 assignmentI:
-    ID ASSIGN exprI             { intAssignment($1, $3); }
-    | ID                        { intAssignment($1,  0); }
-    | INT_ID ASSIGN exprI       { char error[130] = "allready declared variable "; strcat(error,$1);
-                                  free($1); yyerror(error); YYABORT;                                 }
-    | NOT_INT_ID ASSIGN exprI   { char error[150] = "allready declared with other type variable "; strcat(error,$1);
-                                  free($1); yyerror(error); YYABORT;                                                 }
+    ID ASSIGN exprI { intAssignment($1, $3); }
+
+    | ID { intAssignment($1,  0); }
+
+    | INT_ID ASSIGN exprI {
+        char* errorMes = str("allready declared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(error);
+        YYABORT;
+    }
+
+    | NOT_INT_ID ASSIGN exprI {
+        char* errorMes = str("allready declared with other type variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(error);
+        YYABORT;
+    }
 ;
 
 NOT_INT_ID:
-    FLOAT_ID { $$ = $1; } | LONG_INT_ID { $$ = $1; } | BOOL_ID { $$ = $1; } | STRING_ID { $$ = $1; }
+    FLOAT_ID      { $$ = $1; }
+    | LONG_INT_ID { $$ = $1; }
+    | BOOL_ID     { $$ = $1; }
+    | STRING_ID   { $$ = $1; }
 ;
 
 idAssignmentsI:
-    INT_ID ASSIGN idAssignmentsI    { if(problem) { $$ = $1; free($3);                       }
-                                      else if(peekInt(ifSkipBlockStack)) { $$ = $1; free($3); }
-                                      else        { setVarFromId($1, $3); $$ = $1; free($3); } }
+    INT_ID ASSIGN idAssignmentsI {
+        if(problem) {
+            $$ = $1;
+            free($3);
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            $$ = $1;
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            $$ = $1;
+            free($3);
+        }
+    }
 
-    | INT_ID                        { $$ = $1; }
+    | INT_ID { $$ = $1; }
 
-    | ID ASSIGN idAssignmentsI      { problem = 1; $$ = $1; free($3); char error[120] = "undeclared variable ";
-                                      strcat(error,$1); yyerror(error); }
+    | ID ASSIGN idAssignmentsI {
+        problem = 1;
+        $$ = $1;
+        free($3);
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 
-    | ID                            { problem = 1; $$ = $1; char error[120] = "undeclared variable ";
-                                      strcat(error,$1); yyerror(error); }
+    | ID {
+        problem = 1;
+        $$ = $1;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 ;
 
 stmtF:
-    FLOAT_ID ASSIGN exprF           { if(problem) { free($1); YYABORT;          }
-                                      else if(peekInt(ifSkipBlockStack)) free($1);
-                                      else        { setFloat($1, $3); free($1); } }
+    FLOAT_ID ASSIGN exprF {
+        if(problem) {
+            free($1);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) free($1);
+        else {
+            setFloat($1, $3);
+            free($1);
+        }
+    }
 
-    | FLOAT_ID ASSIGN idAssignmentsF{ if(problem) { free($1); free($3); YYABORT;              }
-                                      else if(peekInt(ifSkipBlockStack)) { free($1); free($3);               }
-                                      else        { setVarFromId($1, $3); free($1); free($3); } }
+    | FLOAT_ID ASSIGN idAssignmentsF {
+        if(problem) {
+            free($1);
+            free($3);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            free($1);
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            free($1);
+            free($3);
+        }
+    }
 
-    | ID ASSIGN idAssignmentsF      { char error[120] = "undeclared variable "; strcat(error,$1);
-                                      free($1); free($3); yyerror(error); YYABORT;                }
+    | ID ASSIGN idAssignmentsF {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        free($3);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | ID ASSIGN exprF               { char error[120] = "undeclared variable "; strcat(error,$1);
-                                      free($1); yyerror(error); YYABORT;                          }
+    | ID ASSIGN exprF {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | FLOAT declareListF            { if(problem) YYABORT; }
+    | FLOAT declareListF { if(problem) YYABORT; }
 ;
 
 declareListF:
@@ -408,48 +558,119 @@ declareListF:
 ;
 
 assignmentF:
-    ID ASSIGN exprF             { floatAssignment($1, $3); }
-    | ID                        { floatAssignment($1, 0); }
-    | FLOAT_ID ASSIGN exprF     { char error[130] = "allready declared variable "; strcat(error,$1);
-                                  free($1); yyerror(error); YYABORT;                                 }
-    | NOT_FLOAT_ID ASSIGN exprF { char error[150] = "allready declared with other type variable "; strcat(error,$1);
-                                  free($1); yyerror(error); YYABORT;                                                 }
+    ID ASSIGN exprF { floatAssignment($1, $3); }
+
+    | ID { floatAssignment($1, 0); }
+
+    | FLOAT_ID ASSIGN exprF {
+        char* errorMes = str("allready declared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
+
+    | NOT_FLOAT_ID ASSIGN exprF {
+        char* errorMes = str("allready declared with other type variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 ;
 
 NOT_FLOAT_ID:
-    INT_ID { $$ = $1; } | LONG_INT_ID { $$ = $1; } | BOOL_ID { $$ = $1; } | STRING_ID { $$ = $1; }
+    INT_ID        { $$ = $1; }
+    | LONG_INT_ID { $$ = $1; }
+    | BOOL_ID     { $$ = $1; }
+    | STRING_ID   { $$ = $1; }
 ;
 
 idAssignmentsF:
-    FLOAT_ID ASSIGN idAssignmentsF  { if(problem) { $$ = $1; free($3);                       }
-                                      else if(peekInt(ifSkipBlockStack)) { $$ = $1; free($3);               }
-                                      else        { setVarFromId($1, $3); $$ = $1; free($3); } }
+    FLOAT_ID ASSIGN idAssignmentsF {
+        if(problem) {
+            $$ = $1;
+            free($3);
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            $$ = $1;
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            $$ = $1;
+            free($3);
+        }
+    }
 
-    | FLOAT_ID                      { $$ = $1; }
+    | FLOAT_ID { $$ = $1; }
 
-    | ID ASSIGN idAssignmentsF      { problem = 1; $$ = $1; free($3); char error[120] = "undeclared variable ";
-                                      strcat(error,$1); yyerror(error); }
+    | ID ASSIGN idAssignmentsF {
+        problem = 1;
+        $$ = $1;
+        free($3);
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 
-    | ID                            { problem = 1; $$ = $1; char error[120] = "undeclared variable ";
-                                      strcat(error,$1); yyerror(error); }
+    | ID {
+        problem = 1;
+        $$ = $1;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 ;
 
 stmtLI:
-    LONG_INT_ID ASSIGN exprLI           { if(problem) { free($1); YYABORT;            }
-                                          else if(peekInt(ifSkipBlockStack)) free($1);
-                                          else        { setLongInt($1, $3); free($1); } }
+    LONG_INT_ID ASSIGN exprLI {
+        if(problem) {
+            free($1);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) free($1);
+        else {
+            setLongInt($1, $3);
+            free($1);
+        }
+    }
 
-    | LONG_INT_ID ASSIGN idAssignmentsLI{ if(problem) { free($1); free($3); YYABORT;              }
-                                          else if(peekInt(ifSkipBlockStack)) { free($1); free($3); }
-                                          else        { setVarFromId($1, $3); free($1); free($3); } }
+    | LONG_INT_ID ASSIGN idAssignmentsLI {
+        if(problem) {
+            free($1);
+            free($3);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            free($1);
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            free($1);
+            free($3);
+        }
+    }
     
-    | ID ASSIGN idAssignmentsLI         { char error[120] = "undeclared variable "; strcat(error,$1);
-                                          free($1); free($3); yyerror(error); YYABORT;                }
+    | ID ASSIGN idAssignmentsLI {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        free($3);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | ID ASSIGN exprLI                  { char error[120] = "undeclared variable "; strcat(error,$1);
-                                          free($1); yyerror(error); YYABORT;                          }
+    | ID ASSIGN exprLI {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | LONG INT declareListLI            { if(problem) YYABORT; }
+    | LONG INT declareListLI { if(problem) YYABORT; }
 ;
 
 declareListLI:
@@ -458,48 +679,119 @@ declareListLI:
 ;
 
 assignmentLI:
-    ID ASSIGN exprLI                { longIntAssignment($1, $3); }
-    | ID                            { longIntAssignment($1, 0); }
-    | LONG_INT_ID ASSIGN exprLI     { char error[130] = "allready declared variable "; strcat(error,$1);
-                                      free($1); yyerror(error); YYABORT;                                 }
-    | NOT_LONG_INT_ID ASSIGN exprLI { char error[150] = "allready declared with other type variable "; strcat(error,$1);
-                                      free($1); yyerror(error); YYABORT;                                                 }
+    ID ASSIGN exprLI { longIntAssignment($1, $3); }
+
+    | ID { longIntAssignment($1, 0); }
+
+    | LONG_INT_ID ASSIGN exprLI {
+        char* errorMes = str("allready declared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
+
+    | NOT_LONG_INT_ID ASSIGN exprLI {
+        char* errorMes = str("allready declared with other type variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 ;
 
 NOT_LONG_INT_ID:
-    INT_ID { $$ = $1; } | FLOAT_ID { $$ = $1; } | BOOL_ID { $$ = $1; } | STRING_ID { $$ = $1; }
+    INT_ID      { $$ = $1; }
+    | FLOAT_ID  { $$ = $1; }
+    | BOOL_ID   { $$ = $1; }
+    | STRING_ID { $$ = $1; }
 ;
 
 idAssignmentsLI:
-    LONG_INT_ID ASSIGN idAssignmentsLI  { if(problem) { $$ = $1; free($3);                       }
-                                          else if(peekInt(ifSkipBlockStack)) { $$ = $1; free($3); }
-                                          else        { setVarFromId($1, $3); $$ = $1; free($3); } }
+    LONG_INT_ID ASSIGN idAssignmentsLI {
+        if(problem) {
+            $$ = $1;
+            free($3);
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            $$ = $1;
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            $$ = $1;
+            free($3);
+        }
+    }
 
-    | LONG_INT_ID                       { $$ = $1; }
+    | LONG_INT_ID { $$ = $1; }
 
-    | ID ASSIGN idAssignmentsF          { problem = 1; $$ = $1; free($3); char error[120] = "undeclared variable ";
-                                          strcat(error,$1); yyerror(error); }
+    | ID ASSIGN idAssignmentsF {
+        problem = 1;
+        $$ = $1;
+        free($3);
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 
-    | ID                                { problem = 1; $$ = $1; char error[120] = "undeclared variable ";
-                                          strcat(error,$1); yyerror(error); }
+    | ID {
+        problem = 1;
+        $$ = $1;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 ;
 
 stmtB:
-    BOOL_ID ASSIGN exprB           { if(problem) { free($1); YYABORT;            }
-                                     else if(peekInt(ifSkipBlockStack)) free($1);
-                                     else        { setBool($1, $3); free($1);    } }
+    BOOL_ID ASSIGN exprB {
+        if(problem) {
+            free($1);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) free($1);
+        else {
+            setBool($1, $3);
+            free($1);
+        }
+    }
 
-    | BOOL_ID ASSIGN idAssignmentsB{ if(problem) { free($1); free($3); YYABORT;              }
-                                     else if(peekInt(ifSkipBlockStack)) { free($1); free($3); }
-                                     else        { setVarFromId($1, $3); free($1); free($3); } }
+    | BOOL_ID ASSIGN idAssignmentsB {
+        if(problem) {
+            free($1);
+            free($3);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            free($1);
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            free($1);
+            free($3);
+        }
+    }
 
-    | ID ASSIGN idAssignmentsB     { char error[120] = "undeclared variable "; strcat(error,$1);
-                                     free($1); free($3); yyerror(error); YYABORT;                }
+    | ID ASSIGN idAssignmentsB {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        free($3);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | ID ASSIGN exprB              { char error[120] = "undeclared variable "; strcat(error,$1);
-                                     free($1); yyerror(error); YYABORT;                          }
+    | ID ASSIGN exprB {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | BOOL declareListB            { if(problem) YYABORT; }
+    | BOOL declareListB { if(problem) YYABORT; }
 ;
 
 declareListB:
@@ -508,48 +800,119 @@ declareListB:
 ;
 
 assignmentB:
-    ID ASSIGN exprB             { boolAssignment($1, $3); }
-    | ID                        { boolAssignment($1, TRUE_VAL); }
-    | BOOL_ID ASSIGN exprB      { char error[130] = "allready declared variable "; strcat(error,$1);
-                                  free($1); yyerror(error); YYABORT;                                 }
-    | NOT_BOOL_ID ASSIGN exprB  { char error[150] = "allready declared with other type variable "; strcat(error,$1);
-                                  free($1); yyerror(error); YYABORT;                                                 }
+    ID ASSIGN exprB { boolAssignment($1, $3); }
+
+    | ID { boolAssignment($1, TRUE_VAL); }
+
+    | BOOL_ID ASSIGN exprB {
+        char* errorMes = str("allready declared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
+
+    | NOT_BOOL_ID ASSIGN exprB {
+        char* errorMes = str("allready declared with other type variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 ;
 
 NOT_BOOL_ID:
-    INT_ID { $$ = $1; } | FLOAT_ID { $$ = $1; } | LONG_INT_ID { $$ = $1; } | STRING_ID { $$ = $1; }
+    INT_ID        { $$ = $1; }
+    | FLOAT_ID    { $$ = $1; }
+    | LONG_INT_ID { $$ = $1; }
+    | STRING_ID   { $$ = $1; }
 ;
 
 idAssignmentsB:
-    BOOL_ID ASSIGN idAssignmentsB  { if(problem) { $$ = $1; free($3);                       }
-                                     else if(peekInt(ifSkipBlockStack)) { $$ = $1; free($3); }
-                                     else        { setVarFromId($1, $3); $$ = $1; free($3); } }
+    BOOL_ID ASSIGN idAssignmentsB {
+        if(problem) {
+            $$ = $1;
+            free($3);
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            $$ = $1;
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            $$ = $1;
+            free($3);
+        }
+    }
 
-    | BOOL_ID                      { $$ = $1; }
+    | BOOL_ID { $$ = $1; }
 
-    | ID ASSIGN idAssignmentsB     { problem = 1; $$ = $1; free($3); char error[120] = "undeclared variable ";
-                                     strcat(error,$1); yyerror(error); }
+    | ID ASSIGN idAssignmentsB {
+        problem = 1;
+        $$ = $1;
+        free($3);
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 
-    | ID                           { problem = 1; $$ = $1; char error[120] = "undeclared variable ";
-                                     strcat(error,$1); yyerror(error); }
+    | ID {
+        problem = 1;
+        $$ = $1;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 ;
 
 stmtS:
-    STRING_ID ASSIGN exprS              { if(problem) { free($1); YYABORT;            }
-                                          else if(peekInt(ifSkipBlockStack)) free($1);
-                                          else        { setString($1, $3); free($1);  } }
+    STRING_ID ASSIGN exprS {
+        if(problem) {
+            free($1);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) free($1);
+        else {
+            setString($1, $3);
+            free($1);
+        }
+    }
 
-    | STRING_ID ASSIGN idAssignmentsS   { if(problem) { free($1); free($3); YYABORT;              }
-                                          else if(peekInt(ifSkipBlockStack)) { free($1); free($3); }
-                                          else        { setVarFromId($1, $3); free($1); free($3); } }
+    | STRING_ID ASSIGN idAssignmentsS {
+        if(problem) {
+            free($1);
+            free($3);
+            YYABORT;
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            free($1);
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            free($1);
+            free($3);
+        }
+    }
     
-    | ID ASSIGN idAssignmentsS          { char error[120] = "undeclared variable "; strcat(error,$1);
-                                          free($1); free($3); yyerror(error); YYABORT;                }
+    | ID ASSIGN idAssignmentsS {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        free($3);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | ID ASSIGN exprS                   { char error[120] = "undeclared variable "; strcat(error,$1);
-                                          free($1); yyerror(error); YYABORT;                          }
+    | ID ASSIGN exprS {
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 
-    | STRING declareListS               { if(problem) YYABORT; }
+    | STRING declareListS { if(problem) YYABORT; }
 ;
 
 declareListS:
@@ -558,30 +921,73 @@ declareListS:
 ;
 
 assignmentS:
-    ID ASSIGN exprS                 { stringAssignment($1, $3); }
-    | ID                            { char* str = NULL; equall(&str, ""); stringAssignment($1, str); }
-    | STRING_ID ASSIGN exprS        { char error[130] = "allready declared variable "; strcat(error,$1);
-                                      free($1); yyerror(error); YYABORT;                                 }
-    | NOT_STRING_ID ASSIGN exprS    { char error[150] = "allready declared with other type variable "; strcat(error,$1);
-                                      free($1); yyerror(error); YYABORT;                                                 }
+    ID ASSIGN exprS { stringAssignment($1, $3); }
+
+    | ID {
+        char* str = NULL;
+        equall(&str, "");
+        stringAssignment($1, str);
+    }
+
+    | STRING_ID ASSIGN exprS {
+        char* errorMes = str("allready declared variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
+
+    | NOT_STRING_ID ASSIGN exprS {
+        char* errorMes = str("allready declared with other type variable ");
+        concat(errorMes,$1);
+        free($1);
+        yyerror(errorMes);
+        YYABORT;
+    }
 ;
 
 NOT_STRING_ID:
-    INT_ID { $$ = $1; } | FLOAT_ID { $$ = $1; } | LONG_INT_ID { $$ = $1; } | BOOL_ID { $$ = $1; }
+    INT_ID        { $$ = $1; }
+    | FLOAT_ID    { $$ = $1; }
+    | LONG_INT_ID { $$ = $1; }
+    | BOOL_ID     { $$ = $1; }
 ;
 
 idAssignmentsS:
-    STRING_ID ASSIGN idAssignmentsS { if(problem) { $$ = $1; free($3);                       }
-                                      else if(peekInt(ifSkipBlockStack)) { $$ = $1; free($3); }
-                                      else        { setVarFromId($1, $3); $$ = $1; free($3); } }
+    STRING_ID ASSIGN idAssignmentsS {
+        if(problem) {
+            $$ = $1;
+            free($3);
+        }
+        else if(peekInt(ifSkipBlockStack)) {
+            $$ = $1;
+            free($3);
+        }
+        else {
+            setVarFromId($1, $3);
+            $$ = $1;
+            free($3);
+        }
+    }
 
-    | STRING_ID                     { $$ = $1; }
+    | STRING_ID { $$ = $1; }
 
-    | ID ASSIGN idAssignmentsS      { problem = 1; $$ = $1; free($3); char error[120] = "undeclared variable ";
-                                      strcat(error,$1); yyerror(error); }
+    | ID ASSIGN idAssignmentsS {
+        problem = 1;
+        $$ = $1;
+        free($3);
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 
-    | ID                            { problem = 1; $$ = $1; char error[120] = "undeclared variable ";
-                                      strcat(error,$1); yyerror(error); }
+    | ID {
+        problem = 1;
+        $$ = $1;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes,$1);
+        yyerror(errorMes);
+    }
 ;
 
 exprI:
@@ -876,7 +1282,8 @@ int main(int argc, char** argv) {
 }
 
 // i have to colorize the msg from the begging not now except if i make a temp
-int yyerror(const char *msg) {
+int yyerror(char* msg) {
     printf("%s%s%s:%d in %s\n", C_RED, C_RESET, msg, yylineno, yytext);
+    free(msg);
     return 1;
 }
