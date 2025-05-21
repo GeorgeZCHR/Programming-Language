@@ -145,26 +145,6 @@ void concat(char** ptr, const char* text) {
     }
 }
 
-char* ccat(char* s1, const char* s2) {
-    if (!s2) return s1; // Nothing to append
-
-    size_t len1 = s1 ? strlen(s1) : 0;
-    size_t len2 = strlen(s2);
-
-    char* new_s1 = realloc(s1, len1 + len2 + 1); // +1 for null terminator
-    if (!new_s1) {
-        fprintf(stderr, "Memory allocation failed\n");
-        free(s1); // optional: free original if realloc fails
-        return NULL;
-    }
-
-    // Copy or append
-    if (!s1) new_s1[0] = '\0'; // if s1 was NULL, initialize
-
-    strcat(new_s1, s2); // safe because we allocated enough space
-    return new_s1;       
-}
-
 char* intToString(int num, char* str) {
     asprintf(&str, "%d", num); // ONLY in GNU the asprintf()
     return str;
@@ -193,9 +173,9 @@ char* charToString(const char c) {
     return str;
 }
 
-/* int stringToInt(char* str) {
-
-} */
+int stringToInt(char* str) {
+    int num = atoi(str);
+}
 
 // If i want make that when str is number return number else 0 i suppose
 /* int isStringInt(const char *str) {
