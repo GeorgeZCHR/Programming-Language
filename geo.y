@@ -46,16 +46,16 @@ void intAssignment(char* id, int value) {
         else if(res == 1) {
             problem = 1;
             char* errorMes = str("allready declared ");
-            concat(errorMes, id);
+            concat(&errorMes, id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
-            concat(errorMes,id);
+            concat(&errorMes,id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
     }
 }
@@ -71,14 +71,14 @@ void floatAssignment(char* id, float value) {
             char* errorMes = str("allready declared ");
             concat(errorMes, id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
             concat(errorMes,id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
     }
 }
@@ -94,14 +94,14 @@ void longIntAssignment(char* id, long int value) {
             char* errorMes = str("allready declared ");
             concat(errorMes, id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
             concat(errorMes,id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
     }
 }
@@ -117,14 +117,14 @@ void boolAssignment(char* id, int value) {
             char* errorMes = str("allready declared ");
             concat(errorMes, id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
             concat(errorMes,id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
     }
 }
@@ -140,14 +140,14 @@ void stringAssignment(char* id, char* value) {
             char* errorMes = str("allready declared ");
             concat(errorMes, id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
             concat(errorMes,id);
             free(id);
-            yyerror(error);
+            yyerror(errorMes);
         }
     }
 }
@@ -991,268 +991,690 @@ idAssignmentsS:
 ;
 
 exprI:
-    INT_NUM                            { $$ = $1; }
-    | FLOAT_NUM                        { $$ = (int)$1; }
-    | LONG_INT_NUM                     { $$ = getIntPart($1); }
-    | BOOL_VAL                         { $$ = $1; }
-    | STRING_VAL                       { $$ = 0; free($1); } // if str "" then 0 else 1
-    | ID                               { problem = 1; $$ = 0; char error[120] = "undeclared variable ";
-                                         strcat(error,$1); free($1); yyerror(error); }
+    INT_NUM { $$ = $1; }
 
-    | INT_ID                           { int is_found = NOT_FOUND; int res = getIntFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | FLOAT_NUM { $$ = (int)$1; }
 
-    | FLOAT_ID                         { int is_found = NOT_FOUND; int res = (int)getFloatFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | LONG_INT_NUM { $$ = getIntPart($1); }
 
-    | LONG_INT_ID                      { int is_found = NOT_FOUND; int res = getIntPart(getIntFromId($1, &is_found));
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | BOOL_VAL { $$ = $1; }
+//**********************************************************************
+    | STRING_VAL { $$ = 0; free($1); } // if str "" then 0 else 1
+//**********************************************************************
 
-    | BOOL_ID                          { int is_found = NOT_FOUND; int res = getBoolFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | ID {
+        problem = 1;
+        $$ = 0;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes, $1);
+        free($1);
+        yyerror(errorMes);
+    }
 
-    | STRING_ID                        { int res = getStringIndex($1);
-                                         if(res == FOUND) { $$ = 0; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
-    
-    | exprI PLUS exprI                 { $$ = intAdd($1, $3); }
-    | exprI MINUS exprI                { $$ = intSub($1, $3); }
-    | exprI MUL exprI                  { $$ = intMul($1, $3); }
-    | exprI DIV exprI                  { if ($3 != 0) $$ = intDiv($1, $3);
-                                         else { yyerror("division with 0 as denominator error"); YYABORT; } }
-    | exprI MOD exprI                  { if ($3 != 0) $$ = intMod($1, $3);
-                                         else { yyerror("modulus with 0 as denominator error"); YYABORT; } }
-    | exprI POW exprI                  { $$ = intPow($1, $3); }
-    | LPAREN exprI RPAREN              { $$ = $2; }
-    | MINUS exprI %prec UMINUS         { $$ = -$2; }
-    | PLUS exprI %prec UPLUS           { $$ = $2; }
+    | INT_ID {
+        int is_found = NOT_FOUND;
+        int res = getIntFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | FLOAT_ID {
+        int is_found = NOT_FOUND;
+        int res = (int)getFloatFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | LONG_INT_ID {
+        int is_found = NOT_FOUND;
+        int res = getIntPart(getIntFromId($1, &is_found));
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | BOOL_ID {
+        int is_found = NOT_FOUND;
+        int res = getBoolFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+//**********************************************************************
+    | STRING_ID {
+        int res = getStringIndex($1);
+        if(res == FOUND) {
+            $$ = 0;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+//**********************************************************************    
+    | exprI PLUS exprI { $$ = intAdd($1, $3); }
+
+    | exprI MINUS exprI { $$ = intSub($1, $3); }
+
+    | exprI MUL exprI { $$ = intMul($1, $3); }
+
+    | exprI DIV exprI {
+        if ($3 != 0) $$ = intDiv($1, $3);
+        else {
+            yyerror(str("division with 0 as denominator error"));
+            YYABORT;
+        }
+    }
+
+    | exprI MOD exprI {
+        if ($3 != 0) $$ = intMod($1, $3);
+        else {
+            yyerror("modulus with 0 as denominator error");
+            YYABORT;
+        }
+    }
+
+    | exprI POW exprI { $$ = intPow($1, $3); }
+
+    | LPAREN exprI RPAREN { $$ = $2; }
+
+    | MINUS exprI %prec UMINUS { $$ = -$2; }
+
+    | PLUS exprI %prec UPLUS { $$ = $2; }
 ;
 
 exprF:
-    | FLOAT_NUM                        { $$ = $1; }
-    | INT_NUM                          { $$ = $1; }
-    | LONG_INT_NUM                     { $$ = getIntPart($1); }
-    | BOOL_VAL                         { $$ = $1; }
-    | STRING_VAL                       { $$ = 0; free($1); }
-    | ID                               { problem = 1; $$ = 0; char error[120] = "undeclared variable ";
-                                         strcat(error,$1); free($1); yyerror(error); }
+    | FLOAT_NUM { $$ = $1; }
 
-    | FLOAT_ID                         { int is_found = NOT_FOUND; float res = getFloatFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | INT_NUM { $$ = $1; }
 
-    | INT_ID                           { int is_found = NOT_FOUND; int res = getIntFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | LONG_INT_NUM { $$ = getIntPart($1); }
 
-    | LONG_INT_ID                      { int is_found = NOT_FOUND; int res = getIntPart(getLongIntFromId($1, &is_found));
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | BOOL_VAL { $$ = $1; }
+//**********************************************************************
+    | STRING_VAL { $$ = 0; free($1); }
+//**********************************************************************
+    | ID {
+        problem = 1;
+        $$ = 0;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes, $1);
+        free($1);
+        yyerror(errorMes);
+    }
 
-    | BOOL_ID                          { int is_found = NOT_FOUND; int res = getBoolFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | FLOAT_ID {
+        int is_found = NOT_FOUND;
+        float res = getFloatFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | STRING_ID                        { int res = getStringIndex($1);
-                                         if(res == FOUND) { $$ = 0; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | INT_ID {
+        int is_found = NOT_FOUND;
+        int res = getIntFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | exprF PLUS exprF                 { $$ = floatAdd($1, $3); }
-    | exprF MINUS exprF                { $$ = floatSub($1, $3); }
-    | exprF MUL exprF                  { $$ = floatMul($1, $3); }
-    | exprF DIV exprF                  { if ($3 != 0) $$ = floatDiv($1, $3);
-                                         else { yyerror("division with 0 as denominator error"); YYABORT; } }
-    | exprF POW exprF                  { $$ = floatPow($1, $3); }
-    | LPAREN FLOAT RPAREN exprF        { $$ = $4; }
-    | LPAREN exprF RPAREN              { $$ = $2; }
-    | MINUS exprF %prec UMINUS         { $$ = -$2; }
-    | PLUS exprF %prec UPLUS           { $$ = $2; }
+    | LONG_INT_ID {
+        int is_found = NOT_FOUND;
+        int res = getIntPart(getLongIntFromId($1, &is_found));
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | BOOL_ID {
+        int is_found = NOT_FOUND;
+        int res = getBoolFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | STRING_ID {
+        int res = getStringIndex($1);
+        if(res == FOUND) {
+            $$ = 0;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | exprF PLUS exprF { $$ = floatAdd($1, $3); }
+
+    | exprF MINUS exprF { $$ = floatSub($1, $3); }
+
+    | exprF MUL exprF { $$ = floatMul($1, $3); }
+    
+    | exprF DIV exprF {
+        if ($3 != 0) $$ = floatDiv($1, $3);
+        else {
+            yyerror(str("division with 0 as denominator error"));
+            YYABORT;
+        }
+    }
+
+    | exprF POW exprF { $$ = floatPow($1, $3); }
+
+    | LPAREN FLOAT RPAREN exprF { $$ = $4; }
+
+    | LPAREN exprF RPAREN { $$ = $2; }
+
+    | MINUS exprF %prec UMINUS { $$ = -$2; }
+
+    | PLUS exprF %prec UPLUS { $$ = $2; }
 ;
 
 // I need to put more safety If possible
 exprLI:
-    LONG_INT_NUM                       { $$ = $1; }
-    | INT_NUM                          { $$ = (long int)$1; }
-    | FLOAT_NUM                        { $$ = (long int)$1; }
-    | BOOL_VAL                         { $$ = (long int)$1; }
-    | STRING_VAL                       { $$ = 0; free($1); }
-    | ID                               { problem = 1; $$ = 0; char error[120] = "undeclared variable ";
-                                         strcat(error,$1); free($1); yyerror(error); }
+    LONG_INT_NUM { $$ = $1; }
 
-    | LONG_INT_ID                      { int is_found = NOT_FOUND; long int res = getLongIntFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | INT_NUM { $$ = (long int)$1; }
 
-    | INT_ID                           { int is_found = NOT_FOUND; long int res = getIntFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | FLOAT_NUM { $$ = (long int)$1; }
 
-    | FLOAT_ID                         { int is_found = NOT_FOUND; long int res = (long int)getFloatFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | BOOL_VAL { $$ = (long int)$1; }
 
-    | LONG_INT_ID                      { int is_found = NOT_FOUND; long int res = getLongIntFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | STRING_VAL { $$ = 0; free($1); }
+
+    | ID {
+        problem = 1;
+        $$ = 0;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes, $1);
+        free($1);
+        yyerror(errorMes);
+    }
+
+    | LONG_INT_ID {
+        int is_found = NOT_FOUND;
+        long int res = getLongIntFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | INT_ID {
+        int is_found = NOT_FOUND;
+        long int res = getIntFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | FLOAT_ID {
+        int is_found = NOT_FOUND;
+        long int res = (long int)getFloatFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
+
+    | LONG_INT_ID {
+        int is_found = NOT_FOUND;
+        long int res = getLongIntFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
     
-    | BOOL_ID                          { int is_found = NOT_FOUND; long int res = (long int)getBoolFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | BOOL_ID {
+        int is_found = NOT_FOUND;
+        long int res = (long int)getBoolFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | STRING_ID                        { int res = getStringIndex($1);
-                                         if(res == FOUND) { $$ = 0; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | STRING_ID {
+        int res = getStringIndex($1);
+        if(res == FOUND) {
+            $$ = 0;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | exprLI PLUS exprLI               { $$ = $1 + $3; }
-    | exprLI MINUS exprLI              { $$ = $1 - $3; }
-    | exprLI MUL exprLI                { $$ = $1 * $3; }
-    | exprLI DIV exprLI                { if ($3 != 0) $$ = $1 / $3;
-                                         else { yyerror("division with 0 as denominator error"); YYABORT; } }
-    | exprLI MOD exprLI                { if ($3 != 0) $$ = $1 % $3;
-                                         else { yyerror("modulus with 0 as denominator error"); YYABORT; } }
-    | exprLI POW exprLI                { $$ = (long int)(pow((double)$1, (double)$3)); }
-    | LPAREN exprLI RPAREN             { $$ = $2; }
-    | MINUS exprLI %prec UMINUS        { $$ = -$2; }
-    | PLUS exprLI %prec UPLUS          { $$ = $2; }
-    | TOO_LONG_NUMBER_ERR              { yyerror("too long number error"); YYABORT; }
+    | exprLI PLUS exprLI { $$ = $1 + $3; }
+
+    | exprLI MINUS exprLI { $$ = $1 - $3; }
+
+    | exprLI MUL exprLI { $$ = $1 * $3; }
+
+    | exprLI DIV exprLI {
+        if ($3 != 0) $$ = $1 / $3;
+        else {
+            yyerror(str("division with 0 as denominator error"));
+            YYABORT;
+        }
+    }
+
+    | exprLI MOD exprLI {
+        if ($3 != 0) $$ = $1 % $3;
+        else {
+            yyerror(str("modulus with 0 as denominator error"));
+            YYABORT;
+        }
+    }
+
+    | exprLI POW exprLI { $$ = (long int)(pow((double)$1, (double)$3)); }
+
+    | LPAREN exprLI RPAREN { $$ = $2; }
+
+    | MINUS exprLI %prec UMINUS { $$ = -$2; }
+
+    | PLUS exprLI %prec UPLUS { $$ = $2; }
+    
+    | TOO_LONG_NUMBER_ERR { yyerror(str("too long number error")); YYABORT; }
 ;
 
 exprB:
-    BOOL_VAL                           { $$ = $1; }
-    | exprB EQ exprB                   { $$ = $1 == $3 ? TRUE_VAL : FALSE_VAL; }
-    | exprB NEQ exprB                  { $$ = $1 != $3 ? TRUE_VAL : FALSE_VAL; }
-    | exprB GT exprB                   { $$ = $1 > $3 ? TRUE_VAL : FALSE_VAL; }
-    | exprB LT exprB                   { $$ = $1 < $3 ? TRUE_VAL : FALSE_VAL; }
-    | exprB GTE exprB                  { $$ = $1 >= $3 ? TRUE_VAL : FALSE_VAL; }
-    | exprB LTE exprB                  { $$ = $1 <= $3 ? TRUE_VAL : FALSE_VAL; }
+    BOOL_VAL { $$ = $1; }
 
-    | exprB AND exprB                  { if($1 == FALSE_VAL && $3 == FALSE_VAL) $$ = FALSE_VAL;
-                                         if($1 == FALSE_VAL && $3 == TRUE_VAL ) $$ = FALSE_VAL;
-                                         if($1 == TRUE_VAL  && $3 == FALSE_VAL) $$ = FALSE_VAL;
-                                         if($1 == TRUE_VAL  && $3 == TRUE_VAL ) $$ = FALSE_VAL; }
+    | exprB EQ exprB { $$ = $1 == $3 ? TRUE_VAL : FALSE_VAL; }
 
-    | exprB OR exprB                   { if($1 == FALSE_VAL || $3 == FALSE_VAL) $$ = FALSE_VAL;
-                                         if($1 == FALSE_VAL || $3 == TRUE_VAL ) $$ = TRUE_VAL;
-                                         if($1 == TRUE_VAL  || $3 == FALSE_VAL) $$ = TRUE_VAL;
-                                         if($1 == TRUE_VAL  || $3 == TRUE_VAL ) $$ = TRUE_VAL; }
+    | exprB NEQ exprB { $$ = $1 != $3 ? TRUE_VAL : FALSE_VAL; }
 
-    | NOT exprB                        { $$ = $2 == TRUE_VAL ? FALSE_VAL : TRUE_VAL; }
+    | exprB GT exprB { $$ = $1 > $3 ? TRUE_VAL : FALSE_VAL; }
 
-    | INT_NUM                          { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
-    | FLOAT_NUM                        { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
-    | LONG_INT_NUM                     { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
-    | STRING_VAL                       { $$ = strcmp($1, "") == 0 ? FALSE_VAL : TRUE_VAL; free($1); }
-    | ID                               { problem = 1; $$ = 0; char error[120] = "undeclared variable ";
-                                         strcat(error,$1); free($1); yyerror(error); }
+    | exprB LT exprB { $$ = $1 < $3 ? TRUE_VAL : FALSE_VAL; }
 
-    | BOOL_ID                          { int is_found = NOT_FOUND; int res = getBoolFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | exprB GTE exprB { $$ = $1 >= $3 ? TRUE_VAL : FALSE_VAL; }
+
+    | exprB LTE exprB { $$ = $1 <= $3 ? TRUE_VAL : FALSE_VAL; }
+
+    | exprB AND exprB {
+        if($1 == FALSE_VAL && $3 == FALSE_VAL) $$ = FALSE_VAL;
+        if($1 == FALSE_VAL && $3 == TRUE_VAL ) $$ = FALSE_VAL;
+        if($1 == TRUE_VAL  && $3 == FALSE_VAL) $$ = FALSE_VAL;
+        if($1 == TRUE_VAL  && $3 == TRUE_VAL ) $$ = FALSE_VAL;
+    }
+
+    | exprB OR exprB {
+        if($1 == FALSE_VAL || $3 == FALSE_VAL) $$ = FALSE_VAL;
+        if($1 == FALSE_VAL || $3 == TRUE_VAL ) $$ = TRUE_VAL;
+        if($1 == TRUE_VAL  || $3 == FALSE_VAL) $$ = TRUE_VAL;
+        if($1 == TRUE_VAL  || $3 == TRUE_VAL ) $$ = TRUE_VAL;
+    }
+
+    | NOT exprB { $$ = $2 == TRUE_VAL ? FALSE_VAL : TRUE_VAL; }
+
+    | INT_NUM { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
+
+    | FLOAT_NUM { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
+
+    | LONG_INT_NUM { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
+
+    | STRING_VAL {
+        $$ = strcmp($1, "") == 0 ? FALSE_VAL : TRUE_VAL;
+        free($1);
+    }
+
+    | ID {
+        problem = 1;
+        $$ = 0;
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes, $1);
+        free($1);
+        yyerror(errorMes);
+    }
+
+    | BOOL_ID {
+        int is_found = NOT_FOUND;
+        int res = getBoolFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
     
-    | INT_ID                           { int is_found = NOT_FOUND; int res = getIntFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res == 0 ? FALSE_VAL : TRUE_VAL; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | INT_ID {
+        int is_found = NOT_FOUND;
+        int res = getIntFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res == 0 ? FALSE_VAL : TRUE_VAL;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
     
-    | FLOAT_ID                         { int is_found = NOT_FOUND; float res = getFloatFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res == 0 ? FALSE_VAL : TRUE_VAL; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | FLOAT_ID {
+        int is_found = NOT_FOUND;
+        float res = getFloatFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res == 0 ? FALSE_VAL : TRUE_VAL;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
     
-    | LONG_INT_ID                      { int is_found = NOT_FOUND; long int res = getLongIntFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res == 0 ? FALSE_VAL : TRUE_VAL; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | LONG_INT_ID {
+        int is_found = NOT_FOUND;
+        long int res = getLongIntFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res == 0 ? FALSE_VAL : TRUE_VAL;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
     
-    | STRING_ID                        { int is_found = NOT_FOUND; char* res = getStringFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = strcmp(res, "") != 0 ? TRUE_VAL : FALSE_VAL; free(res); free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free(res); free($1); yyerror(error); YYABORT; } }
+    | STRING_ID {
+        int is_found = NOT_FOUND;
+        char* res = getStringFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = strcmp(res, "") != 0 ? TRUE_VAL : FALSE_VAL;
+            free(res);
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free(res);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | LPAREN exprB RPAREN             { $$ = $2; }
+    | LPAREN exprB RPAREN { $$ = $2; }
 ;
 
 exprS:
-    STRING_VAL                         { $$ = $1; }
-    | ID                               { problem = 1; $$ = ""; char error[120] = "undeclared variable ";
-                                         strcat(error,$1); free($1); yyerror(error); }
+    STRING_VAL { $$ = $1; }
 
-    | INT_ID                           { int is_found = NOT_FOUND;
-                                         char* res = intToString(getIntFromId($1, &is_found), res);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | ID {
+        problem = 1;
+        $$ = "";
+        char* errorMes = str("undeclared variable ");
+        concat(errorMes, $1);
+        free($1);
+        yyerror(errorMes);
+    }
 
-    | FLOAT_ID                         { int is_found = NOT_FOUND;
-                                         char* res = floatToString(getFloatFromId($1, &is_found), res);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | INT_ID {
+        int is_found = NOT_FOUND;
+        char* res = intToString(getIntFromId($1, &is_found), res);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | LONG_INT_ID                      { int is_found = NOT_FOUND;
-                                         char* res = longIntToString(getLongIntFromId($1, &is_found), res);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
-    | BOOL_ID                          { int is_found = NOT_FOUND;
-                                         char* res = boolToString(getBoolFromId($1, &is_found), res);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free($1); yyerror(error); YYABORT; } }
+    | FLOAT_ID {
+        int is_found = NOT_FOUND;
+        char* res = floatToString(getFloatFromId($1, &is_found), res);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | STRING_ID                        { int is_found = NOT_FOUND; char* res = getStringFromId($1, &is_found);
-                                         if(is_found == FOUND) { $$ = res; free($1); }
-                                         else { char error[120] = "undeclared variable "; strcat(error,$1);
-                                                free(res); free($1); yyerror(error); YYABORT; } }
+    | LONG_INT_ID {
+        int is_found = NOT_FOUND;
+        char* res = longIntToString(getLongIntFromId($1, &is_found), res);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    // maybe i can add exprI COLON exprI COLON exprI wher second exprI is step
-    | STRING_ID LPAREN exprI RPAREN
-    { int is_found = NOT_FOUND; char* res = getStringFromId($1, &is_found);
-      $$ = charToString(enhancedCharAt(res,$3)); free(res); free($1);       }
+    | BOOL_ID {
+        int is_found = NOT_FOUND;
+        char* res = boolToString(getBoolFromId($1, &is_found), res);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | STRING_ID LPAREN COLON RPAREN
-    { int is_found = NOT_FOUND; char* res = getStringFromId($1, &is_found);
-      $$ = enhancedSubString(res, 0, strlen(res) - 1); free(res); free($1); }
+    | STRING_ID {
+        int is_found = NOT_FOUND;
+        char* res = getStringFromId($1, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($1);
+        }
+        else {
+            char* errorMes = str("undeclared variable ");
+            concat(errorMes, $1);
+            free(res);
+            free($1);
+            yyerror(errorMes);
+            YYABORT;
+        }
+    }
 
-    | STRING_ID LPAREN COLON exprI RPAREN
-    { int is_found = NOT_FOUND; char* res = getStringFromId($1, &is_found);
-      $$ = enhancedSubString(res, 0, $4); free(res); free($1); }
+    // maybe i can add exprI COLON exprI COLON exprI where second exprI is step
+    | STRING_ID LPAREN exprI RPAREN {
+        int is_found = NOT_FOUND;
+        char* res = getStringFromId($1, &is_found);
+        $$ = charToString(enhancedCharAt(res,$3));
+        free(res);
+        free($1);
+    }
+
+    | STRING_ID LPAREN COLON RPAREN {
+        int is_found = NOT_FOUND;
+        char* res = getStringFromId($1, &is_found);
+        $$ = enhancedSubString(res, 0, strlen(res) - 1);
+        free(res);
+        free($1);
+    }
+
+    | STRING_ID LPAREN COLON exprI RPAREN {
+        int is_found = NOT_FOUND;
+        char* res = getStringFromId($1, &is_found);
+        $$ = enhancedSubString(res, 0, $4);
+        free(res);
+        free($1);
+    }
     
-    | STRING_ID LPAREN exprI COLON RPAREN
-    { int is_found = NOT_FOUND; char* res = getStringFromId($1, &is_found);
-      $$ = enhancedSubString(res, $3, strlen(res) - 1); free(res); free($1); }
+    | STRING_ID LPAREN exprI COLON RPAREN {
+        int is_found = NOT_FOUND;
+        char* res = getStringFromId($1, &is_found);
+        $$ = enhancedSubString(res, $3, strlen(res) - 1);
+        free(res);
+        free($1);
+    }
 
-    | STRING_ID LPAREN exprI COLON exprI RPAREN
-    { int is_found = NOT_FOUND; char* res = getStringFromId($1, &is_found);
-      $$ = enhancedSubString(res, $3, $5); free(res); free($1); }
+    | STRING_ID LPAREN exprI COLON exprI RPAREN {
+        int is_found = NOT_FOUND;
+        char* res = getStringFromId($1, &is_found);
+        $$ = enhancedSubString(res, $3, $5);
+        free(res);
+        free($1);
+    }
 
-    | INT_NUM                          { char* num = intToString($1, num); $$ = num; }
-    | FLOAT_NUM                        { char* num = floatToString($1, $$); $$ = num; }
-    | LONG_INT_NUM                     { char* num = longIntToString($1, $$); $$ = num; }
-    | BOOL_VAL                         { char* num = boolToString($1, $$); $$ = num; }
-    | exprS PLUS exprS                 { concat(&$1, $3); $$ = $1; free($3); }
-    | LPAREN exprS RPAREN              { $$ = $2; }
+    | INT_NUM { char* num = intToString($1, num); $$ = num; }
+
+    | FLOAT_NUM { char* num = floatToString($1, $$); $$ = num; }
+
+    | LONG_INT_NUM { char* num = longIntToString($1, $$); $$ = num; }
+
+    | BOOL_VAL { char* num = boolToString($1, $$); $$ = num; }
+
+    | exprS PLUS exprS { concat(&$1, $3); $$ = $1; free($3); }
+
+    | LPAREN exprS RPAREN { $$ = $2; }
 ;
 
 %%
