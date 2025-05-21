@@ -185,6 +185,13 @@ int checkPreviousWhiles() {
     }
     return 1;
 }
+
+void undeclaredVariableError(const char* id) {
+    char* errorMes = str("undeclared variable ");
+    concat(&errorMes, id);
+    free(id);
+    yyerror(errorMes);
+}
 %}
 
 %debug
@@ -412,19 +419,13 @@ stmtI:
     }
 
     | ID ASSIGN idAssignmentsI {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
+        undeclaredVariableError($1);
         free($3);
-        yyerror(errorMes);
         YYABORT;
     }
 
     | ID ASSIGN exprI {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
         YYABORT;
     }
 
@@ -533,19 +534,13 @@ stmtF:
     }
 
     | ID ASSIGN idAssignmentsF {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
+        undeclaredVariableError($1);
         free($3);
-        yyerror(errorMes);
         YYABORT;
     }
 
     | ID ASSIGN exprF {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
         YYABORT;
     }
 
@@ -654,19 +649,13 @@ stmtLI:
     }
     
     | ID ASSIGN idAssignmentsLI {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
+        undeclaredVariableError($1);
         free($3);
-        yyerror(errorMes);
         YYABORT;
     }
 
     | ID ASSIGN exprLI {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
         YYABORT;
     }
 
@@ -775,19 +764,13 @@ stmtB:
     }
 
     | ID ASSIGN idAssignmentsB {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
+        undeclaredVariableError($1);
         free($3);
-        yyerror(errorMes);
         YYABORT;
     }
 
     | ID ASSIGN exprB {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
         YYABORT;
     }
 
@@ -869,9 +852,13 @@ stmtS:
     STRING_ID ASSIGN exprS {
         if(problem) {
             free($1);
+            free($3);
             YYABORT;
         }
-        else if(peekInt(ifSkipBlockStack)) free($1);
+        else if(peekInt(ifSkipBlockStack)) {
+            free($1);
+            free($3);
+        }
         else {
             setString($1, $3);
             free($1);
@@ -896,19 +883,14 @@ stmtS:
     }
     
     | ID ASSIGN idAssignmentsS {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
+        undeclaredVariableError($1);
         free($3);
-        yyerror(errorMes);
         YYABORT;
     }
 
     | ID ASSIGN exprS {
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
+        free($3);
         YYABORT;
     }
 
@@ -933,6 +915,7 @@ assignmentS:
         char* errorMes = str("allready declared variable ");
         concat(&errorMes, $1);
         free($1);
+        free($3);
         yyerror(errorMes);
         YYABORT;
     }
@@ -941,6 +924,7 @@ assignmentS:
         char* errorMes = str("allready declared with other type variable ");
         concat(&errorMes, $1);
         free($1);
+        free($3);
         yyerror(errorMes);
         YYABORT;
     }
@@ -992,23 +976,25 @@ idAssignmentsS:
 
 exprI:
     INT_NUM { $$ = $1; }
+    | LPAREN INT RPAREN INT_NUM { $$ = $4; }
 
     | FLOAT_NUM { $$ = (int)$1; }
+    | LPAREN INT RPAREN exprF { $$ = (int)$4; }
 
     | LONG_INT_NUM { $$ = getIntPart($1); }
+    | LPAREN INT RPAREN exprLI { $$ = getIntPart($4); }
 
-    | BOOL_VAL { $$ = $1; }
-//**********************************************************************
-    | STRING_VAL { $$ = 0; free($1); } // if str "" then 0 else 1
-//**********************************************************************
+    | LPAREN INT RPAREN exprB { $$ = $4; }
+
+    | LPAREN INT RPAREN exprS {
+        $$ = strcmp($4, "") == 0 ? 0 : 1;
+        free($4);
+    } // if str == "" then 0 else 1
 
     | ID {
         problem = 1;
         $$ = 0;
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
     }
 
     | INT_ID {
@@ -1019,77 +1005,50 @@ exprI:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
+            YYABORT;
+        }
+    }
+
+    | LPAREN INT RPAREN INT_ID {
+        int is_found = NOT_FOUND;
+        int res = getIntFromId($4, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($4);
+        }
+        else {
+            undeclaredVariableError($4);
             YYABORT;
         }
     }
 
     | FLOAT_ID {
         int is_found = NOT_FOUND;
-        int res = (int)getFloatFromId($1, &is_found);
+        int res = getIntFromId($1, &is_found);
         if(is_found == FOUND) {
             $$ = res;
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
 
     | LONG_INT_ID {
         int is_found = NOT_FOUND;
-        int res = getIntPart(getIntFromId($1, &is_found));
+        int res = getIntFromId($1, &is_found);
         if(is_found == FOUND) {
             $$ = res;
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
-
-    | BOOL_ID {
-        int is_found = NOT_FOUND;
-        int res = getBoolFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-//**********************************************************************
-    | STRING_ID {
-        int res = getStringIndex($1);
-        if(res == FOUND) {
-            $$ = 0;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-//**********************************************************************    
+ 
     | exprI PLUS exprI { $$ = intAdd($1, $3); }
 
     | exprI MINUS exprI { $$ = intSub($1, $3); }
@@ -1122,23 +1081,26 @@ exprI:
 ;
 
 exprF:
-    | FLOAT_NUM { $$ = $1; }
+    FLOAT_NUM { $$ = $1; }
+    | LPAREN FLOAT RPAREN FLOAT_NUM { $$ = $4; }
 
     | INT_NUM { $$ = $1; }
+    | LPAREN FLOAT RPAREN exprI { $$ = $4; }
 
     | LONG_INT_NUM { $$ = getIntPart($1); }
+    | LPAREN FLOAT RPAREN exprLI { $$ = getIntPart($4); }
 
-    | BOOL_VAL { $$ = $1; }
-//**********************************************************************
-    | STRING_VAL { $$ = 0; free($1); }
-//**********************************************************************
+    | LPAREN FLOAT RPAREN exprB { $$ = $4; }
+
+    | LPAREN FLOAT RPAREN exprS {
+        $$ = strcmp($4, "") == 0 ? 0 : 1;
+        free($4);
+    }
+
     | ID {
         problem = 1;
         $$ = 0;
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
     }
 
     | FLOAT_ID {
@@ -1149,73 +1111,46 @@ exprF:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
 
-    | INT_ID {
+    | LPAREN FLOAT RPAREN FLOAT_ID {
         int is_found = NOT_FOUND;
-        int res = getIntFromId($1, &is_found);
+        float res = getFloatFromId($4, &is_found);
         if(is_found == FOUND) {
             $$ = res;
-            free($1);
+            free($4);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($4);
+            YYABORT;
+        }
+    }
+
+    | LPAREN FLOAT RPAREN INT_ID {
+        int is_found = NOT_FOUND;
+        float res = getFloatFromId($4, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($4);
+        }
+        else {
+            undeclaredVariableError($4);
             YYABORT;
         }
     }
 
     | LONG_INT_ID {
         int is_found = NOT_FOUND;
-        int res = getIntPart(getLongIntFromId($1, &is_found));
+        int res = getFloatFromId($1, &is_found);
         if(is_found == FOUND) {
             $$ = res;
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-
-    | BOOL_ID {
-        int is_found = NOT_FOUND;
-        int res = getBoolFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-
-    | STRING_ID {
-        int res = getStringIndex($1);
-        if(res == FOUND) {
-            $$ = 0;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
@@ -1248,22 +1183,25 @@ exprF:
 // I need to put more safety If possible
 exprLI:
     LONG_INT_NUM { $$ = $1; }
+    | LPAREN LONG INT RPAREN LONG_INT_NUM { $$ = $5; }
 
     | INT_NUM { $$ = (long int)$1; }
+    | LPAREN LONG INT RPAREN exprI { $$ = (long int)$5; }
 
     | FLOAT_NUM { $$ = (long int)$1; }
+    | LPAREN LONG INT RPAREN exprF { $$ = (long int)$5; }
 
-    | BOOL_VAL { $$ = (long int)$1; }
+    | LPAREN LONG INT RPAREN exprB { $$ = (long int)$5; }
 
-    | STRING_VAL { $$ = 0; free($1); }
+    | LPAREN LONG INT RPAREN exprS {
+        $$ = (long int)(strcmp($5, "") == 0 ? 0 : 1);
+        free($5);
+    }
 
     | ID {
         problem = 1;
         $$ = 0;
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
     }
 
     | LONG_INT_ID {
@@ -1274,47 +1212,51 @@ exprLI:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
+            YYABORT;
+        }
+    }
+
+    | LPAREN LONG INT RPAREN LONG_INT_NUM {
+        int is_found = NOT_FOUND;
+        long int res = getLongIntFromId($5, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($5);
+        }
+        else {
+            undeclaredVariableError($5);
             YYABORT;
         }
     }
 
     | INT_ID {
         int is_found = NOT_FOUND;
-        long int res = getIntFromId($1, &is_found);
+        long int res = getLongIntFromId($1, &is_found);
         if(is_found == FOUND) {
             $$ = res;
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
+            YYABORT;
+        }
+    }
+
+    | LPAREN LONG INT RPAREN INT_ID {
+        int is_found = NOT_FOUND;
+        long int res = getLongIntFromId($5, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($5);
+        }
+        else {
+            undeclaredVariableError($5);
             YYABORT;
         }
     }
 
     | FLOAT_ID {
-        int is_found = NOT_FOUND;
-        long int res = (long int)getFloatFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-
-    | LONG_INT_ID {
         int is_found = NOT_FOUND;
         long int res = getLongIntFromId($1, &is_found);
         if(is_found == FOUND) {
@@ -1322,41 +1264,20 @@ exprLI:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-    
-    | BOOL_ID {
-        int is_found = NOT_FOUND;
-        long int res = (long int)getBoolFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
 
-    | STRING_ID {
-        int res = getStringIndex($1);
-        if(res == FOUND) {
-            $$ = 0;
-            free($1);
+    | LPAREN LONG INT RPAREN FLOAT_ID {
+        int is_found = NOT_FOUND;
+        long int res = getLongIntFromId($5, &is_found);
+        if(is_found == FOUND) {
+            $$ = res;
+            free($5);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($5);
             YYABORT;
         }
     }
@@ -1396,6 +1317,7 @@ exprLI:
 
 exprB:
     BOOL_VAL { $$ = $1; }
+    | LPAREN BOOL RPAREN BOOL_VAL { $$ = $4; }
 
     | exprB EQ exprB { $$ = $1 == $3 ? TRUE_VAL : FALSE_VAL; }
 
@@ -1425,24 +1347,21 @@ exprB:
 
     | NOT exprB { $$ = $2 == TRUE_VAL ? FALSE_VAL : TRUE_VAL; }
 
-    | INT_NUM { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | LPAREN BOOL RPAREN exprI { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
 
-    | FLOAT_NUM { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | LPAREN BOOL RPAREN exprF { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
 
-    | LONG_INT_NUM { $$ = $1 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | LPAREN BOOL RPAREN exprLI { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
 
-    | STRING_VAL {
-        $$ = strcmp($1, "") == 0 ? FALSE_VAL : TRUE_VAL;
-        free($1);
+    | LPAREN BOOL RPAREN exprS {
+        $$ = strcmp($4, "") == 0 ? FALSE_VAL : TRUE_VAL;
+        free($4);
     }
 
     | ID {
         problem = 1;
         $$ = 0;
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
     }
 
     | BOOL_ID {
@@ -1453,76 +1372,20 @@ exprB:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
-    
-    | INT_ID {
+
+    | LPAREN BOOL RPAREN BOOL_ID {
         int is_found = NOT_FOUND;
-        int res = getIntFromId($1, &is_found);
+        int res = getBoolFromId($4, &is_found);
         if(is_found == FOUND) {
-            $$ = res == 0 ? FALSE_VAL : TRUE_VAL;
-            free($1);
+            $$ = res;
+            free($4);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-    
-    | FLOAT_ID {
-        int is_found = NOT_FOUND;
-        float res = getFloatFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res == 0 ? FALSE_VAL : TRUE_VAL;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-    
-    | LONG_INT_ID {
-        int is_found = NOT_FOUND;
-        long int res = getLongIntFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res == 0 ? FALSE_VAL : TRUE_VAL;
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
-            YYABORT;
-        }
-    }
-    
-    | STRING_ID {
-        int is_found = NOT_FOUND;
-        char* res = getStringFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = strcmp(res, "") != 0 ? TRUE_VAL : FALSE_VAL;
-            free(res);
-            free($1);
-        }
-        else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free(res);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($4);
             YYABORT;
         }
     }
@@ -1536,10 +1399,7 @@ exprS:
     | ID {
         problem = 1;
         $$ = "";
-        char* errorMes = str("undeclared variable ");
-        concat(&errorMes, $1);
-        free($1);
-        yyerror(errorMes);
+        undeclaredVariableError($1);
     }
 
     | INT_ID {
@@ -1550,10 +1410,7 @@ exprS:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
@@ -1566,10 +1423,7 @@ exprS:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
@@ -1582,10 +1436,7 @@ exprS:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
@@ -1598,10 +1449,7 @@ exprS:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free($1);
-            yyerror(errorMes);
+            undeclaredVariableError($1);
             YYABORT;
         }
     }
@@ -1614,16 +1462,19 @@ exprS:
             free($1);
         }
         else {
-            char* errorMes = str("undeclared variable ");
-            concat(&errorMes, $1);
-            free(res);
+            undeclaredVariableError($1);
             free($1);
-            yyerror(errorMes);
+            free(res);
             YYABORT;
         }
     }
 
     // maybe i can add exprI COLON exprI COLON exprI where second exprI is step
+    | STRING_ID LPAREN RPAREN {
+        $$ = "";
+        free($1);
+    }
+
     | STRING_ID LPAREN exprI RPAREN {
         int is_found = NOT_FOUND;
         char* res = getStringFromId($1, &is_found);
@@ -1670,7 +1521,7 @@ exprS:
 
     | LONG_INT_NUM { char* num = longIntToString($1, $$); $$ = num; }
 
-    | BOOL_VAL { char* num = boolToString($1, $$); $$ = num; }
+    | BOOL_VAL { char* val = boolToString($1, $$); $$ = val; }
 
     | exprS PLUS exprS { concat(&$1, $3); $$ = $1; free($3); }
 
