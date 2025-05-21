@@ -14,7 +14,7 @@
 #define BLOCK_SKIP 1
 
 int yylex(void);
-int yyerror(const char *msg);
+int yyerror(char* msg);
 
 int problem = 0;
 int skip_block = 0;
@@ -53,7 +53,7 @@ void intAssignment(char* id, int value) {
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
-            concat(&errorMes,id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
@@ -69,14 +69,14 @@ void floatAssignment(char* id, float value) {
         else if(res == 1) {
             problem = 1;
             char* errorMes = str("allready declared ");
-            concat(errorMes, id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
-            concat(errorMes,id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
@@ -92,14 +92,14 @@ void longIntAssignment(char* id, long int value) {
         else if(res == 1) {
             problem = 1;
             char* errorMes = str("allready declared ");
-            concat(errorMes, id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
-            concat(errorMes,id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
@@ -115,14 +115,14 @@ void boolAssignment(char* id, int value) {
         else if(res == 1) {
             problem = 1;
             char* errorMes = str("allready declared ");
-            concat(errorMes, id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
-            concat(errorMes,id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
@@ -138,14 +138,14 @@ void stringAssignment(char* id, char* value) {
         else if(res == 1) {
             problem = 1;
             char* errorMes = str("allready declared ");
-            concat(errorMes, id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
         else {
             problem = 1;
             char* errorMes = str("allready declared (in different type) ");
-            concat(errorMes,id);
+            concat(&errorMes, id);
             free(id);
             yyerror(errorMes);
         }
@@ -270,9 +270,9 @@ includeCode:
     INCLUDE exprS {
         // this is a real mid-rule action!
         if (!parse_subfile($2)) {
-            char error[256] = "file does not exist --- ";
-            strcat(error, $2);
-            yyerror(error);
+            char* errorMes = str("file does not exist --- ");
+            concat(&errorMes, $2);
+            yyerror(errorMes);
             free($2);
             YYABORT;
         }
@@ -413,7 +413,7 @@ stmtI:
 
     | ID ASSIGN idAssignmentsI {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         free($3);
         yyerror(errorMes);
@@ -422,9 +422,9 @@ stmtI:
 
     | ID ASSIGN exprI {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
-        yyerror(error);
+        yyerror(errorMes);
         YYABORT;
     }
 
@@ -443,17 +443,17 @@ assignmentI:
 
     | INT_ID ASSIGN exprI {
         char* errorMes = str("allready declared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
-        yyerror(error);
+        yyerror(errorMes);
         YYABORT;
     }
 
     | NOT_INT_ID ASSIGN exprI {
         char* errorMes = str("allready declared with other type variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
-        yyerror(error);
+        yyerror(errorMes);
         YYABORT;
     }
 ;
@@ -489,7 +489,7 @@ idAssignmentsI:
         $$ = $1;
         free($3);
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 
@@ -497,7 +497,7 @@ idAssignmentsI:
         problem = 1;
         $$ = $1;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 ;
@@ -534,7 +534,7 @@ stmtF:
 
     | ID ASSIGN idAssignmentsF {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         free($3);
         yyerror(errorMes);
@@ -543,7 +543,7 @@ stmtF:
 
     | ID ASSIGN exprF {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -564,7 +564,7 @@ assignmentF:
 
     | FLOAT_ID ASSIGN exprF {
         char* errorMes = str("allready declared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -572,7 +572,7 @@ assignmentF:
 
     | NOT_FLOAT_ID ASSIGN exprF {
         char* errorMes = str("allready declared with other type variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -610,7 +610,7 @@ idAssignmentsF:
         $$ = $1;
         free($3);
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 
@@ -618,7 +618,7 @@ idAssignmentsF:
         problem = 1;
         $$ = $1;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 ;
@@ -655,7 +655,7 @@ stmtLI:
     
     | ID ASSIGN idAssignmentsLI {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         free($3);
         yyerror(errorMes);
@@ -664,7 +664,7 @@ stmtLI:
 
     | ID ASSIGN exprLI {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -685,7 +685,7 @@ assignmentLI:
 
     | LONG_INT_ID ASSIGN exprLI {
         char* errorMes = str("allready declared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -693,7 +693,7 @@ assignmentLI:
 
     | NOT_LONG_INT_ID ASSIGN exprLI {
         char* errorMes = str("allready declared with other type variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -731,7 +731,7 @@ idAssignmentsLI:
         $$ = $1;
         free($3);
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 
@@ -739,7 +739,7 @@ idAssignmentsLI:
         problem = 1;
         $$ = $1;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 ;
@@ -776,7 +776,7 @@ stmtB:
 
     | ID ASSIGN idAssignmentsB {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         free($3);
         yyerror(errorMes);
@@ -785,7 +785,7 @@ stmtB:
 
     | ID ASSIGN exprB {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -806,7 +806,7 @@ assignmentB:
 
     | BOOL_ID ASSIGN exprB {
         char* errorMes = str("allready declared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -814,7 +814,7 @@ assignmentB:
 
     | NOT_BOOL_ID ASSIGN exprB {
         char* errorMes = str("allready declared with other type variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -852,7 +852,7 @@ idAssignmentsB:
         $$ = $1;
         free($3);
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 
@@ -860,7 +860,7 @@ idAssignmentsB:
         problem = 1;
         $$ = $1;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 ;
@@ -897,7 +897,7 @@ stmtS:
     
     | ID ASSIGN idAssignmentsS {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         free($3);
         yyerror(errorMes);
@@ -906,7 +906,7 @@ stmtS:
 
     | ID ASSIGN exprS {
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -931,7 +931,7 @@ assignmentS:
 
     | STRING_ID ASSIGN exprS {
         char* errorMes = str("allready declared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -939,7 +939,7 @@ assignmentS:
 
     | NOT_STRING_ID ASSIGN exprS {
         char* errorMes = str("allready declared with other type variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
         YYABORT;
@@ -977,7 +977,7 @@ idAssignmentsS:
         $$ = $1;
         free($3);
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 
@@ -985,7 +985,7 @@ idAssignmentsS:
         problem = 1;
         $$ = $1;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes,$1);
+        concat(&errorMes, $1);
         yyerror(errorMes);
     }
 ;
@@ -1006,7 +1006,7 @@ exprI:
         problem = 1;
         $$ = 0;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes, $1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
     }
@@ -1020,7 +1020,7 @@ exprI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1036,7 +1036,7 @@ exprI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1052,7 +1052,7 @@ exprI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1068,7 +1068,7 @@ exprI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1083,7 +1083,7 @@ exprI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1107,7 +1107,7 @@ exprI:
     | exprI MOD exprI {
         if ($3 != 0) $$ = intMod($1, $3);
         else {
-            yyerror("modulus with 0 as denominator error");
+            yyerror(str("modulus with 0 as denominator error"));
             YYABORT;
         }
     }
@@ -1136,7 +1136,7 @@ exprF:
         problem = 1;
         $$ = 0;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes, $1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
     }
@@ -1150,7 +1150,7 @@ exprF:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1166,7 +1166,7 @@ exprF:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1182,7 +1182,7 @@ exprF:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1198,7 +1198,7 @@ exprF:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1213,7 +1213,7 @@ exprF:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1261,7 +1261,7 @@ exprLI:
         problem = 1;
         $$ = 0;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes, $1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
     }
@@ -1275,7 +1275,7 @@ exprLI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1291,7 +1291,7 @@ exprLI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1307,7 +1307,7 @@ exprLI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1323,7 +1323,7 @@ exprLI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1339,7 +1339,7 @@ exprLI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1354,7 +1354,7 @@ exprLI:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1440,7 +1440,7 @@ exprB:
         problem = 1;
         $$ = 0;
         char* errorMes = str("undeclared variable ");
-        concat(errorMes, $1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
     }
@@ -1454,7 +1454,7 @@ exprB:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1470,7 +1470,7 @@ exprB:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1486,7 +1486,7 @@ exprB:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1502,7 +1502,7 @@ exprB:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1519,7 +1519,7 @@ exprB:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free(res);
             free($1);
             yyerror(errorMes);
@@ -1537,7 +1537,7 @@ exprS:
         problem = 1;
         $$ = "";
         char* errorMes = str("undeclared variable ");
-        concat(errorMes, $1);
+        concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
     }
@@ -1551,7 +1551,7 @@ exprS:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1567,7 +1567,7 @@ exprS:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1583,7 +1583,7 @@ exprS:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1599,7 +1599,7 @@ exprS:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free($1);
             yyerror(errorMes);
             YYABORT;
@@ -1615,7 +1615,7 @@ exprS:
         }
         else {
             char* errorMes = str("undeclared variable ");
-            concat(errorMes, $1);
+            concat(&errorMes, $1);
             free(res);
             free($1);
             yyerror(errorMes);
