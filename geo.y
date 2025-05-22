@@ -186,12 +186,108 @@ int checkPreviousWhiles() {
     return 1;
 }
 
+void divWithZeroError() {
+    yyerror(str("division with 0 as denominator error"));
+}
+
+void modWithZeroError() {
+    yyerror(str("modulus with 0 as denominator error"));
+}
+
+void tooBigNumError() {
+    yyerror(str("too long number error"));
+}
+
 void undeclaredVariableError(const char* id) {
     char* errorMes = str("undeclared variable ");
     concat(&errorMes, id);
     free(id);
     yyerror(errorMes);
 }
+
+void invalidCastingError() {
+    yyerror(str("invalid casting error"));
+}
+
+int intRes;
+float floatRes;
+long int longIntRes;
+int boolRes;
+char* stringRes = NULL;
+
+int getIntFromIdHelper(char* id) {
+    int is_found = NOT_FOUND;
+    int res = getIntFromId(id, &is_found);
+    if(is_found == FOUND) {
+        intRes = res;
+        free(id);
+        return 0;
+    }
+    else {
+        undeclaredVariableError(id);
+        return 1;
+    }
+}
+
+int getFloatFromIdHelper(char* id) {
+    int is_found = NOT_FOUND;
+    float res = getFloatFromId(id, &is_found);
+    if(is_found == FOUND) {
+        floatRes = res;
+        free(id);
+        return 0;
+    }
+    else {
+        undeclaredVariableError(id);
+        return 1;
+    }
+}
+
+int getLongIntFromIdHelper(char* id) {
+    int is_found = NOT_FOUND;
+    long int res = getLongIntFromId(id, &is_found);
+    if(is_found == FOUND) {
+        longIntRes = res;
+        free(id);
+        return 0;
+    }
+    else {
+        undeclaredVariableError(id);
+        return 1;
+    }
+}
+
+int getBoolFromIdHelper(char* id) {
+    int is_found = NOT_FOUND;
+    int res = getBoolFromId(id, &is_found);
+    if(is_found == FOUND) {
+        boolRes = res;
+        free(id);
+        return 0;
+    }
+    else {
+        undeclaredVariableError(id);
+        return 1;
+    }
+}
+
+int getStringFromIdHelper(char* id) {
+    int is_found = NOT_FOUND;
+    char* res = getStringFromId(id, &is_found);
+    if(is_found == FOUND) {
+        stringRes = NULL;
+        equall(&stringRes, res);
+        free(res);
+        free(id);
+        return 0;
+    }
+    else {
+        free(res);
+        undeclaredVariableError(id);
+        return 1;
+    }
+}
+
 %}
 
 %debug
@@ -975,21 +1071,31 @@ idAssignmentsS:
 ;
 
 exprI:
-    INT_NUM { $$ = $1; }
-    | LPAREN INT RPAREN INT_NUM { $$ = $4; }
+    LPAREN INT RPAREN INT_NUM { $$ = $4; }
+    | INT_NUM { $$ = $1; }
 
+    | LPAREN INT RPAREN FLOAT_NUM { $$ = (int)$4; }
     | FLOAT_NUM { $$ = (int)$1; }
-    | LPAREN INT RPAREN exprF { $$ = (int)$4; }
 
+    | LPAREN INT RPAREN LONG_INT_NUM { $$ = getIntPart($4); }
     | LONG_INT_NUM { $$ = getIntPart($1); }
-    | LPAREN INT RPAREN exprLI { $$ = getIntPart($4); }
 
-    | LPAREN INT RPAREN exprB { $$ = $4; }
+    | LPAREN INT RPAREN BOOL_VAL { $$ = $4; }
+    | BOOL_VAL {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
 
-    | LPAREN INT RPAREN exprS {
+    | LPAREN INT RPAREN STRING_VAL {
         $$ = strcmp($4, "") == 0 ? 0 : 1;
         free($4);
     } // if str == "" then 0 else 1
+    | STRING_VAL {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
 
     | ID {
         problem = 1;
@@ -997,56 +1103,56 @@ exprI:
         undeclaredVariableError($1);
     }
 
-    | INT_ID {
-        int is_found = NOT_FOUND;
-        int res = getIntFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+    | LPAREN INT RPAREN INT_ID {
+        if(getIntFromIdHelper($4) == 0) $$ = intRes;
+        else YYABORT;
     }
 
-    | LPAREN INT RPAREN INT_ID {
-        int is_found = NOT_FOUND;
-        int res = getIntFromId($4, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($4);
-        }
-        else {
-            undeclaredVariableError($4);
-            YYABORT;
-        }
+    | INT_ID {
+        if(getIntFromIdHelper($1) == 0) $$ = intRes;
+        else YYABORT;
+    }
+
+    | LPAREN INT RPAREN FLOAT_ID {
+        if(getIntFromIdHelper($4) == 0) $$ = intRes;
+        else YYABORT;
     }
 
     | FLOAT_ID {
-        int is_found = NOT_FOUND;
-        int res = getIntFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+        if(getIntFromIdHelper($1) == 0) $$ = intRes;
+        else YYABORT;
+    }
+
+    | LPAREN INT RPAREN LONG_INT_ID {
+        if(getIntFromIdHelper($4) == 0) $$ = intRes;
+        else YYABORT;
     }
 
     | LONG_INT_ID {
-        int is_found = NOT_FOUND;
-        int res = getIntFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+        if(getIntFromIdHelper($1) == 0) $$ = intRes;
+        else YYABORT;
+    }
+
+    | LPAREN INT RPAREN BOOL_ID {
+        if(getIntFromIdHelper($4) == 0) $$ = intRes;
+        else YYABORT;
+    }
+
+    | BOOL_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
+
+    | LPAREN INT RPAREN STRING_ID {
+        if(getIntFromIdHelper($4) == 0) $$ = intRes;
+        else YYABORT;
+    }
+
+    | STRING_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
     }
  
     | exprI PLUS exprI { $$ = intAdd($1, $3); }
@@ -1058,7 +1164,7 @@ exprI:
     | exprI DIV exprI {
         if ($3 != 0) $$ = intDiv($1, $3);
         else {
-            yyerror(str("division with 0 as denominator error"));
+            divWithZeroError();
             YYABORT;
         }
     }
@@ -1066,7 +1172,7 @@ exprI:
     | exprI MOD exprI {
         if ($3 != 0) $$ = intMod($1, $3);
         else {
-            yyerror(str("modulus with 0 as denominator error"));
+            modWithZeroError();
             YYABORT;
         }
     }
@@ -1081,20 +1187,30 @@ exprI:
 ;
 
 exprF:
-    FLOAT_NUM { $$ = $1; }
-    | LPAREN FLOAT RPAREN FLOAT_NUM { $$ = $4; }
+    LPAREN FLOAT RPAREN FLOAT_NUM { $$ = $4; }
+    | FLOAT_NUM { $$ = $1; }
 
+    | LPAREN FLOAT RPAREN INT_NUM { $$ = $4; }
     | INT_NUM { $$ = $1; }
-    | LPAREN FLOAT RPAREN exprI { $$ = $4; }
 
+    | LPAREN FLOAT RPAREN LONG_INT_NUM { $$ = getIntPart($4); }
     | LONG_INT_NUM { $$ = getIntPart($1); }
-    | LPAREN FLOAT RPAREN exprLI { $$ = getIntPart($4); }
 
-    | LPAREN FLOAT RPAREN exprB { $$ = $4; }
+    | LPAREN FLOAT RPAREN BOOL_VAL { $$ = $4; }
+    | BOOL_VAL {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
 
-    | LPAREN FLOAT RPAREN exprS {
+    | LPAREN FLOAT RPAREN STRING_VAL {
         $$ = strcmp($4, "") == 0 ? 0 : 1;
         free($4);
+    }
+    | STRING_VAL {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
     }
 
     | ID {
@@ -1103,57 +1219,58 @@ exprF:
         undeclaredVariableError($1);
     }
 
-    | FLOAT_ID {
-        int is_found = NOT_FOUND;
-        float res = getFloatFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+    | LPAREN FLOAT RPAREN FLOAT_ID {
+        if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
+        else YYABORT;
     }
 
-    | LPAREN FLOAT RPAREN FLOAT_ID {
-        int is_found = NOT_FOUND;
-        float res = getFloatFromId($4, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($4);
-        }
-        else {
-            undeclaredVariableError($4);
-            YYABORT;
-        }
+    | FLOAT_ID {
+        if(getFloatFromIdHelper($1) == 0) $$ = floatRes;
+        else YYABORT;
     }
 
     | LPAREN FLOAT RPAREN INT_ID {
-        int is_found = NOT_FOUND;
-        float res = getFloatFromId($4, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($4);
-        }
-        else {
-            undeclaredVariableError($4);
-            YYABORT;
-        }
+        if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
+        else YYABORT;
+    }
+
+    | INT_ID {
+        if(getFloatFromIdHelper($1) == 0) $$ = floatRes;
+        else YYABORT;
+    }
+
+    | LPAREN FLOAT RPAREN LONG_INT_ID {
+        if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
+        else YYABORT;
     }
 
     | LONG_INT_ID {
-        int is_found = NOT_FOUND;
-        int res = getFloatFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+        if(getFloatFromIdHelper($1) == 0) $$ = floatRes;
+        else YYABORT;
     }
+
+    | LPAREN FLOAT RPAREN BOOL_ID {
+        if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
+        else YYABORT;
+    }
+
+    | BOOL_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
+
+    | LPAREN FLOAT RPAREN STRING_ID {
+        if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
+        else YYABORT;
+    }
+
+    | STRING_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
+
 
     | exprF PLUS exprF { $$ = floatAdd($1, $3); }
 
@@ -1164,7 +1281,7 @@ exprF:
     | exprF DIV exprF {
         if ($3 != 0) $$ = floatDiv($1, $3);
         else {
-            yyerror(str("division with 0 as denominator error"));
+            divWithZeroError();
             YYABORT;
         }
     }
@@ -1182,20 +1299,30 @@ exprF:
 
 // I need to put more safety If possible
 exprLI:
-    LONG_INT_NUM { $$ = $1; }
-    | LPAREN LONG INT RPAREN LONG_INT_NUM { $$ = $5; }
+    LPAREN LONG INT RPAREN LONG_INT_NUM { $$ = $5; }
+    | LONG_INT_NUM { $$ = $1; }
 
+    | LPAREN LONG INT RPAREN INT_NUM { $$ = (long int)$5; }
     | INT_NUM { $$ = (long int)$1; }
-    | LPAREN LONG INT RPAREN exprI { $$ = (long int)$5; }
 
+    | LPAREN LONG INT RPAREN FLOAT_NUM { $$ = (long int)$5; }
     | FLOAT_NUM { $$ = (long int)$1; }
-    | LPAREN LONG INT RPAREN exprF { $$ = (long int)$5; }
 
-    | LPAREN LONG INT RPAREN exprB { $$ = (long int)$5; }
+    | LPAREN LONG INT RPAREN BOOL_VAL { $$ = (long int)$5; }
+    | BOOL_VAL {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
 
-    | LPAREN LONG INT RPAREN exprS {
+    | LPAREN LONG INT RPAREN STRING_VAL {
         $$ = (long int)(strcmp($5, "") == 0 ? 0 : 1);
         free($5);
+    }
+    | STRING_VAL {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
     }
 
     | ID {
@@ -1204,82 +1331,56 @@ exprLI:
         undeclaredVariableError($1);
     }
 
+    | LPAREN LONG INT RPAREN LONG_INT_ID {
+        if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
+        else YYABORT;
+    }
+
     | LONG_INT_ID {
-        int is_found = NOT_FOUND;
-        long int res = getLongIntFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
-    }
-
-    | LPAREN LONG INT RPAREN LONG_INT_NUM {
-        int is_found = NOT_FOUND;
-        long int res = getLongIntFromId($5, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($5);
-        }
-        else {
-            undeclaredVariableError($5);
-            YYABORT;
-        }
-    }
-
-    | INT_ID {
-        int is_found = NOT_FOUND;
-        long int res = getLongIntFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+        if(getLongIntFromIdHelper($1) == 0) $$ = longIntRes;
+        else YYABORT;
     }
 
     | LPAREN LONG INT RPAREN INT_ID {
-        int is_found = NOT_FOUND;
-        long int res = getLongIntFromId($5, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($5);
-        }
-        else {
-            undeclaredVariableError($5);
-            YYABORT;
-        }
+        if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
+        else YYABORT;
     }
 
-    | FLOAT_ID {
-        int is_found = NOT_FOUND;
-        long int res = getLongIntFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+    | INT_ID {
+        if(getLongIntFromIdHelper($1) == 0) $$ = longIntRes;
+        else YYABORT;
     }
 
     | LPAREN LONG INT RPAREN FLOAT_ID {
-        int is_found = NOT_FOUND;
-        long int res = getLongIntFromId($5, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($5);
-        }
-        else {
-            undeclaredVariableError($5);
-            YYABORT;
-        }
+        if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
+        else YYABORT;
+    }
+
+    | FLOAT_ID {
+        if(getLongIntFromIdHelper($1) == 0) $$ = longIntRes;
+        else YYABORT;
+    }
+
+    | LPAREN LONG INT RPAREN BOOL_ID {
+        if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
+        else YYABORT;
+    }
+
+    | BOOL_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
+
+    | LPAREN LONG INT RPAREN STRING_ID {
+        if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
+        else YYABORT;
+    }
+
+    | STRING_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
     }
 
     | exprLI PLUS exprLI { $$ = $1 + $3; }
@@ -1291,7 +1392,7 @@ exprLI:
     | exprLI DIV exprLI {
         if ($3 != 0) $$ = $1 / $3;
         else {
-            yyerror(str("division with 0 as denominator error"));
+            divWithZeroError();
             YYABORT;
         }
     }
@@ -1299,7 +1400,7 @@ exprLI:
     | exprLI MOD exprLI {
         if ($3 != 0) $$ = $1 % $3;
         else {
-            yyerror(str("modulus with 0 as denominator error"));
+            modWithZeroError();
             YYABORT;
         }
     }
@@ -1312,12 +1413,12 @@ exprLI:
 
     | PLUS exprLI %prec UPLUS { $$ = $2; }
     
-    | TOO_LONG_NUMBER_ERR { yyerror(str("too long number error")); YYABORT; }
+    | TOO_LONG_NUMBER_ERR { tooBigNumError(); YYABORT; }
 ;
 
 exprB:
-    BOOL_VAL { $$ = $1; }
-    | LPAREN BOOL RPAREN BOOL_VAL { $$ = $4; }
+    LPAREN BOOL RPAREN BOOL_VAL { $$ = $4; }
+    | BOOL_VAL { $$ = $1; }
 
     | exprB EQ exprB { $$ = $1 == $3 ? TRUE_VAL : FALSE_VAL; }
 
@@ -1347,15 +1448,35 @@ exprB:
 
     | NOT exprB { $$ = $2 == TRUE_VAL ? FALSE_VAL : TRUE_VAL; }
 
-    | LPAREN BOOL RPAREN exprI { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | LPAREN BOOL RPAREN INT_NUM { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | INT_NUM {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
 
-    | LPAREN BOOL RPAREN exprF { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | LPAREN BOOL RPAREN FLOAT_NUM { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | FLOAT_NUM {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
 
-    | LPAREN BOOL RPAREN exprLI { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | LPAREN BOOL RPAREN LONG_INT_NUM { $$ = $4 == 0 ? FALSE_VAL : TRUE_VAL; }
+    | LONG_INT_NUM {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
 
-    | LPAREN BOOL RPAREN exprS {
+    | LPAREN BOOL RPAREN STRING_VAL {
         $$ = strcmp($4, "") == 0 ? FALSE_VAL : TRUE_VAL;
         free($4);
+    }
+    | STRING_VAL {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
     }
 
     | ID {
@@ -1364,37 +1485,78 @@ exprB:
         undeclaredVariableError($1);
     }
 
-    | BOOL_ID {
-        int is_found = NOT_FOUND;
-        int res = getBoolFromId($1, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+    | LPAREN BOOL RPAREN BOOL_ID {
+        if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
+        else YYABORT;
     }
 
-    | LPAREN BOOL RPAREN BOOL_ID {
-        int is_found = NOT_FOUND;
-        int res = getBoolFromId($4, &is_found);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($4);
-        }
-        else {
-            undeclaredVariableError($4);
-            YYABORT;
-        }
+    | BOOL_ID {
+        if(getBoolFromIdHelper($1) == 0) $$ = boolRes;
+        else YYABORT;
+    }
+
+    | LPAREN BOOL RPAREN INT_ID {
+        if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
+        else YYABORT;
+    }
+
+    | INT_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
+
+    | LPAREN BOOL RPAREN FLOAT_ID {
+        if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
+        else YYABORT;
+    }
+
+    | FLOAT_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
+
+    | LPAREN BOOL RPAREN LONG_INT_ID {
+        if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
+        else YYABORT;
+    }
+
+    | LONG_INT_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
+    }
+
+    | LPAREN BOOL RPAREN STRING_ID {
+        if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
+        else YYABORT;
+    }
+
+    | STRING_ID {
+        problem = 1;
+        $$ = 0;
+        invalidCastingError();
     }
 
     | LPAREN exprB RPAREN { $$ = $2; }
 ;
 
 exprS:
-    STRING_VAL { $$ = $1; }
+    | LPAREN STRING RPAREN STRING_VAL { $$ = $4; }
+    | STRING_VAL { $$ = $1; }
+
+    | LPAREN STRING RPAREN INT_NUM { char* num = intToString($4, num); $$ = num; }
+    | INT_NUM { char* num = intToString($1, num); $$ = num; }
+
+    | LPAREN STRING RPAREN FLOAT_NUM { char* num = floatToString($4, num); $$ = num; }
+    | FLOAT_NUM { char* num = floatToString($1, $$); $$ = num; }
+
+    | LPAREN STRING RPAREN LONG_INT_NUM { char* num = longIntToString($4, num); $$ = num; }
+    | LONG_INT_NUM { char* num = longIntToString($1, $$); $$ = num; }
+
+    | LPAREN STRING RPAREN BOOL_VAL { char* num = boolToString($4, num); $$ = num; }
+    | BOOL_VAL { char* val = boolToString($1, $$); $$ = val; }
 
     | ID {
         problem = 1;
@@ -1402,54 +1564,56 @@ exprS:
         undeclaredVariableError($1);
     }
 
+    | LPAREN STRING RPAREN INT_ID {
+        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        else YYABORT;
+    }
+
     | INT_ID {
-        int is_found = NOT_FOUND;
-        char* res = intToString(getIntFromId($1, &is_found), res);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        else YYABORT;
+    }
+
+    | LPAREN STRING RPAREN FLOAT_ID {
+        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        else YYABORT;
     }
 
     | FLOAT_ID {
-        int is_found = NOT_FOUND;
-        char* res = floatToString(getFloatFromId($1, &is_found), res);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        else YYABORT;
+    }
+
+    | LPAREN STRING RPAREN LONG_INT_ID {
+        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        else YYABORT;
     }
 
     | LONG_INT_ID {
-        int is_found = NOT_FOUND;
-        char* res = longIntToString(getLongIntFromId($1, &is_found), res);
-        if(is_found == FOUND) {
-            $$ = res;
-            free($1);
-        }
-        else {
-            undeclaredVariableError($1);
-            YYABORT;
-        }
+        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        else YYABORT;
+    }
+
+    | LPAREN STRING RPAREN BOOL_ID {
+        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        else YYABORT;
     }
 
     | BOOL_ID {
+        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        else YYABORT;
+    }
+
+    | LPAREN STRING RPAREN STRING_ID {
         int is_found = NOT_FOUND;
-        char* res = boolToString(getBoolFromId($1, &is_found), res);
+        char* res = getStringFromId($4, &is_found);
         if(is_found == FOUND) {
             $$ = res;
-            free($1);
+            free($4);
         }
         else {
-            undeclaredVariableError($1);
+            undeclaredVariableError($4);
+            free(res);
             YYABORT;
         }
     }
@@ -1463,7 +1627,6 @@ exprS:
         }
         else {
             undeclaredVariableError($1);
-            free($1);
             free(res);
             YYABORT;
         }
@@ -1471,7 +1634,7 @@ exprS:
 
     // maybe i can add exprI COLON exprI COLON exprI where second exprI is step
     | STRING_ID LPAREN RPAREN {
-        $$ = "";
+        $$ = str("");
         free($1);
     }
 
@@ -1515,14 +1678,6 @@ exprS:
         free($1);
     }
 
-    | INT_NUM { char* num = intToString($1, num); $$ = num; }
-
-    | FLOAT_NUM { char* num = floatToString($1, $$); $$ = num; }
-
-    | LONG_INT_NUM { char* num = longIntToString($1, $$); $$ = num; }
-
-    | BOOL_VAL { char* val = boolToString($1, $$); $$ = val; }
-
     | exprS PLUS exprS { concat(&$1, $3); $$ = $1; free($3); }
 
     | LPAREN exprS RPAREN { $$ = $2; }
@@ -1539,6 +1694,7 @@ int main(int argc, char** argv) {
     elseExprStack = createIntStack(name3);
     char* name4 = str("whileExprStack");
     whileExprStack = createIntStack(name4);
+    stringRes = str("");
 
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
@@ -1551,6 +1707,7 @@ int main(int argc, char** argv) {
     freeIntStack(ifSkipBlockStack);
     freeIntStack(elseExprStack);
     freeIntStack(whileExprStack);
+    free(stringRes);
     return 0;
 }
 

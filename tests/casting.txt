@@ -1,67 +1,109 @@
 // Test General
-/*int num1 = 100;
+
+print("----------Testing Variables----------\n");
+int num1 = 100;
 float num2 = 33.33;
 long int num3 = 3000000000;
 bool stmt = true;
 string name = "geo";
 print all
 
+
+print("----------Int Section----------\n");
 int a1 = num1;
 int a2 = num2;
 int a3 = num3;
-int a4 = stmt;
-int a5 = name;
+int a4 = (int) stmt;
+int a5 = (int) name;
 print int
 
 a1 = 100;
 a2 = 33.33;
 a3 = 3000000000;
-a4 = true;
-a5 = "geo";
+a4 = (int) true;
+a5 = (int) "geo";
 print int
 
+a1 = (int) num1;
+a2 = (int) num2;
+a3 = (int) num3;
+print int
+
+a1 = (int) 100;
+a2 = (int) 33.33;
+a3 = (int) 3000000000;
+print int
+
+
+print("----------Float Section----------\n");
 float b1 = num1;
 float b2 = num2;
 float b3 = num3;
-float b4 = stmt;
-float b5 = name;
+float b4 = (float) stmt;
+float b5 = (float) name;
 print float
 
 b1 = 100;
 b2 = 33.33;
 b3 = 3000000000;
-b4 = true;
-b5 = "geo";
+b4 = (float) true;
+b5 = (float) "geo";
 print float
 
+b1 = (float) num1;
+b2 = (float) num2;
+b3 = (float) num3;
+print float
+
+b1 = (float) 100;
+b2 = (float) 33.33;
+b3 = (float) 3000000000;
+print float
+
+
+print("----------Long Int Section----------\n");
 long int c1 = num1;
 long int c2 = num2;
 long int c3 = num3;
-long int c4 = stmt;
-long int c5 = name;
+long int c4 = (long int) stmt;
+long int c5 = (long int) name;
 print long int
 
 c1 = 100;
 c2 = 33.33;
 c3 = 3000000000;
-c4 = true;
-c5 = "geo";
+c4 = (long int) true;
+c5 = (long int) "geo";
 print long int
 
-bool d1 = num1;
-bool d2 = num2;
-bool d3 = num3;
-bool d4 = stmt;
-bool d5 = name;
+c1 = (long int) 100;
+c2 = (long int) 33.33;
+c3 = (long int) 3000000000;
+print long int
+
+c1 = (long int) num1;
+c2 = (long int) num2;
+c3 = (long int) num3;
+print long int
+
+
+print("----------Bool Section----------\n");
+bool d1 = (bool) num1;
+bool d2 = (bool) num2;
+bool d3 = (bool) num3;
+bool d4 = (bool) stmt;
+bool d5 = (bool) name;
 print bool
 
-d1 = 100;
-d2 = 33.33;
-d3 = 3000000000;
-d4 = true;
-d5 = "geo";
+d1 = (bool) 100;
+d2 = (bool) 33.33;
+d3 = (bool) 3000000000;
+d4 = (bool) true;
+d5 = (bool) "geo";
 print bool
 
+
+print("----------String Section----------\n");
 string e1 = num1;
 string e2 = num2;
 string e3 = num3;
@@ -74,26 +116,6 @@ e2 = 33.33;
 e3 = 3000000000;
 e4 = true;
 e5 = "geo";
-print string*/
-
-// Test Bool
-bool a = 100;
-bool b = 100.2;
-bool c = 3000000000;
-bool d = true;
-bool e = "true";
-print bool
-
-int a1 = 100;
-float b1 = 100.2;
-long int c1 = 3000000000;
-bool d1 = true;
-string e1 = "true";
-a = a1;
-b =  b1;
-c = c1;
-d = d1;
-e = e1;
-print bool
+print string
 
 exit
