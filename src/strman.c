@@ -173,10 +173,6 @@ char* charToString(const char c) {
     return str;
 }
 
-int stringToInt(char* str) {
-    int num = atoi(str);
-}
-
 // If i want make that when str is number return number else 0 i suppose
 /* int isStringInt(const char *str) {
     if (str == NULL || *str == '\0') return INDEX_NOT_FOUND;

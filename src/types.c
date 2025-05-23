@@ -398,7 +398,7 @@ int getIntFromId(const char* label, int* is_found) {
     idx = getBoolIndex(label);
     if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return boolTable[idx].value; }
     idx = getStringIndex(label);
-    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return 0; }
+    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return strcmp(stringTable[idx].value, "") == 0 ? 0 : 1; }
     *is_found = NOT_FOUND;
     return NOT_FOUND;
 }
@@ -414,7 +414,7 @@ float getFloatFromId(const char* label, int* is_found) {
     idx = getBoolIndex(label);
     if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return boolTable[idx].value; }
     idx = getStringIndex(label);
-    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return 0; }
+    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return strcmp(stringTable[idx].value, "") == 0 ? 0 : 1; }
     *is_found = NOT_FOUND;
     return NOT_FOUND;
 }
@@ -426,11 +426,11 @@ long int getLongIntFromId(const char* label, int* is_found) {
     idx = getIntIndex(label);
     if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return intTable[idx].value; }
     idx = getFloatIndex(label);
-    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return (long int)floatTable[idx].value; }
+    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return (long int) floatTable[idx].value; }
     idx = getBoolIndex(label);
     if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return boolTable[idx].value; }
     idx = getStringIndex(label);
-    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return 0; }
+    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return strcmp(stringTable[idx].value, "") == 0 ? 0 : 1; }
     *is_found = NOT_FOUND;
     return NOT_FOUND;
 }
@@ -446,7 +446,7 @@ int getBoolFromId(const char* label, int* is_found) {
     idx = getLongIntIndex(label);
     if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return longIntTable[idx].value; }
     idx = getStringIndex(label);
-    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return 0; }
+    if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return strcmp(stringTable[idx].value, "") == 0 ? 0 : 1; }
     *is_found = NOT_FOUND;
     return NOT_FOUND;
 }
@@ -480,7 +480,7 @@ char* getStringFromId(const char* label, int* is_found) {
     idx = getStringIndex(label);
     if(idx != INDEX_NOT_FOUND) { *is_found = FOUND; return strdup(stringTable[idx].value); }
     *is_found = NOT_FOUND;
-    return ""; // i will have to update wherever getStringFromId exist and check if return == "" so not found
+    return str(""); // i will have to update wherever getStringFromId exist and check if return == "" so not found
 }
 
 void printIntTable() {
