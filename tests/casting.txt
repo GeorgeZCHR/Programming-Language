@@ -118,4 +118,18 @@ e4 = true;
 e5 = "geo";
 print string
 
+e1 = (string) num1;
+e2 = (string) num2;
+e3 = (string) num3;
+e4 = (string) stmt;
+e5 = (string) name;
+print string
+
+e1 = (string) 100;
+e2 = (string) 33.33;
+e3 = (string) 3000000000;
+e4 = (string) true;
+e5 = (string) "geo";
+print string
+
 exit

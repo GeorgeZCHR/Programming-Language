@@ -276,7 +276,8 @@ int getStringFromIdHelper(char* id) {
     char* res = getStringFromId(id, &is_found);
     if(is_found == FOUND) {
         stringRes = NULL;
-        equall(&stringRes, res);
+        stringRes = str("");
+        concat(&stringRes, res);
         free(res);
         free(id);
         return 0;
@@ -1565,42 +1566,42 @@ exprS:
     }
 
     | LPAREN STRING RPAREN INT_ID {
-        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | INT_ID {
-        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LPAREN STRING RPAREN FLOAT_ID {
-        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | FLOAT_ID {
-        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LPAREN STRING RPAREN LONG_INT_ID {
-        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LONG_INT_ID {
-        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LPAREN STRING RPAREN BOOL_ID {
-        if(getStringFromIdHelper($4) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | BOOL_ID {
-        if(getStringFromIdHelper($1) == 0) $$ = stringRes;
+        if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
@@ -1694,7 +1695,11 @@ int main(int argc, char** argv) {
     elseExprStack = createIntStack(name3);
     char* name4 = str("whileExprStack");
     whileExprStack = createIntStack(name4);
-    stringRes = str("");
+    /* printf("---|%s|---\n", stringRes);
+    equall(&stringRes, "hello");
+    printf("---|%s|---\n", stringRes);
+    equall(&stringRes, "");
+    printf("---|%s|---\n", stringRes); */
 
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
@@ -1707,7 +1712,8 @@ int main(int argc, char** argv) {
     freeIntStack(ifSkipBlockStack);
     freeIntStack(elseExprStack);
     freeIntStack(whileExprStack);
-    free(stringRes);
+    /* free(stringRes);
+    stringRes = NULL; */
     return 0;
 }
 

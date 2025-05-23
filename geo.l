@@ -60,14 +60,14 @@ int parse_subfile(const char* filename) {
 %x STRING_APPEAR
 %x BACKSLASH
 
-ws0     	        [ \t]*
+ws0     	      [ \t]*
 ws1               [ \t]+
-letter  	        [A-Za-z_]
-nzdigit 	        [1-9]
-digit   	        (0|{nzdigit})
-digits  	        {digit}+
+letter  	      [A-Za-z_]
+nzdigit 	      [1-9]
+digit             (0|{nzdigit})
+digits            {digit}+
 symbol            [!@#\$%\^&*()_+\-={}\[\]|:;\'<>,.?/~`]
-id      	        {letter}({letter}|{digit}){0,62}
+id     	          {letter}({letter}|{digit}){0,62}
 string            ({letter}|{digit}|{symbol}|{ws0})*
 number            ({digits})
 numberWithDecimal (((({nzdigit}{digit}*)|0)\.{number})|{number})
