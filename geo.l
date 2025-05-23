@@ -83,6 +83,7 @@ noBraces          ([^{}]|\n)
           BEGIN(STRING_APPEAR);
       }
 
+"<=>" { col += yyleng; return SWAP; }
 "+" { col += yyleng; return PLUS; }
 "-" { col += yyleng; return MINUS; }
 "*" { col += yyleng; return MUL; }
