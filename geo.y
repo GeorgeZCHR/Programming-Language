@@ -37,6 +37,13 @@ IntStack* ifSkipBlockStack = NULL;
 IntStack* elseExprStack = NULL;
 IntStack* whileExprStack = NULL;
 
+int intRes;
+float floatRes;
+long int longIntRes;
+int boolRes;
+char* stringRes = NULL;
+char* lastID = NULL;
+
 void intAssignment(char* id, int value) {
     if(problem) free(id);
     else if(peekInt(ifSkipBlockStack)) free(id);
@@ -205,15 +212,16 @@ void undeclaredVariableError(const char* id) {
     yyerror(errorMes);
 }
 
+void undeclaredSwappedVarError(const char* id) {
+    char* errorMes = str("undeclared and swapped ");
+    concat(&errorMes, id);
+    free(id);
+    yyerror(errorMes);
+}
+
 void invalidCastingError() {
     yyerror(str("invalid casting error"));
 }
-
-int intRes;
-float floatRes;
-long int longIntRes;
-int boolRes;
-char* stringRes = NULL;
 
 int getIntFromIdHelper(char* id) {
     int is_found = NOT_FOUND;
@@ -289,13 +297,22 @@ int getStringFromIdHelper(char* id) {
     }
 }
 
+void setLastID(char* id) {
+    if(lastID != NULL) {
+        free(lastID);
+    }
+    lastID = NULL;
+    lastID = str("");
+    concat(&lastID, id);
+}
+
 %}
 
 %debug
 
 %token PLUS MINUS MUL DIV MOD POW
 %token LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE SEM ASSIGN COMMA COLON
-%token EQ NEQ GT LT GTE LTE AND OR NOT
+%token EQ NEQ GT LT GTE LTE AND OR NOT SWAP
 %token IF ELSE WHILE BLOCK INCLUDE
 %token PRINT INT LONG FLOAT STRING BOOL ALL ERROR EXIT
 %token TOO_LONG_NUMBER_ERR
@@ -362,12 +379,80 @@ stmts:
     | stmtLI SEM stmts
     | stmtB SEM stmts
     | stmtS SEM stmts
+    | swap SEM stmts
     | printFunc SEM stmts
     | stmtIF
     | stmtWHILE
     | block stmts
     | includeCode
     | spcl
+;
+
+swap:
+    ID SWAP ID { undeclaredSwappedVarError($1); undeclaredSwappedVarError($3); YYABORT; }
+
+    // Because it's starting with ID there will be no difference from the others like exprI,... so only this func is needed
+    | ID SWAP exprI { undeclaredSwappedVarError($1); YYABORT; }
+
+    | INT_ID SWAP exprI {
+        if(problem) { free($1); YYABORT; }
+        else {
+            int is_found = NOT_FOUND;
+            int temp = getIntFromId($1, &is_found);
+            if(is_found == NOT_FOUND) { undeclaredVariableError($1); YYABORT; }
+            setInt($1, $3);
+            setInt(lastID, temp);
+            free($1);
+        }
+    }
+
+    | FLOAT_ID SWAP exprF {
+        if(problem) { free($1); YYABORT; }
+        else {
+            int is_found = NOT_FOUND;
+            float temp = getFloatFromId($1, &is_found);
+            if(is_found == NOT_FOUND) { undeclaredVariableError($1); YYABORT; }
+            setFloat($1, $3);
+            setFloat(lastID, temp);
+            free($1);
+        }
+    }
+
+    | LONG_INT_ID SWAP exprLI {
+        if(problem) { free($1); YYABORT; }
+        else {
+            int is_found = NOT_FOUND;
+            long int temp = getLongIntFromId($1, &is_found);
+            if(is_found == NOT_FOUND) { undeclaredVariableError($1); YYABORT; }
+            setLongInt($1, $3);
+            setLongInt(lastID, temp);
+            free($1);
+        }
+    }
+
+    | BOOL_ID SWAP exprB {
+        if(problem) { free($1); YYABORT; }
+        else {
+            int is_found = NOT_FOUND;
+            int temp = getBoolFromId($1, &is_found);
+            if(is_found == NOT_FOUND) { undeclaredVariableError($1); YYABORT; }
+            setBool($1, $3);
+            setBool(lastID, temp);
+            free($1);
+        }
+    }
+
+    | STRING_ID SWAP exprS {
+        if(problem) { free($1); YYABORT; }
+        else {
+            int is_found = NOT_FOUND;
+            char* temp = getStringFromId($1, &is_found);
+            if(is_found == NOT_FOUND) { undeclaredVariableError($1); YYABORT; }
+            setString($1, $3);
+            setString(lastID, temp);
+            free($1);
+        }
+    }
 ;
 
 includeCode:
@@ -527,6 +612,11 @@ stmtI:
     }
 
     | INT declareListI { if(problem) YYABORT; }
+
+    | INT ID SWAP exprI {
+        if(problem) YYABORT;
+        else { undeclaredSwappedVarError($2); YYABORT; }
+    }
 ;
 
 declareListI:
@@ -642,6 +732,11 @@ stmtF:
     }
 
     | FLOAT declareListF { if(problem) YYABORT; }
+
+    | FLOAT ID SWAP exprF {
+        if(problem) YYABORT;
+        else { undeclaredSwappedVarError($2); YYABORT; }
+    }
 ;
 
 declareListF:
@@ -757,6 +852,11 @@ stmtLI:
     }
 
     | LONG INT declareListLI { if(problem) YYABORT; }
+
+    | LONG INT ID SWAP exprLI {
+        if(problem) YYABORT;
+        else { undeclaredSwappedVarError($3); YYABORT; }
+    }
 ;
 
 declareListLI:
@@ -872,6 +972,11 @@ stmtB:
     }
 
     | BOOL declareListB { if(problem) YYABORT; }
+
+    | BOOL ID SWAP exprB {
+        if(problem) YYABORT;
+        else { undeclaredSwappedVarError($2); YYABORT; }
+    }
 ;
 
 declareListB:
@@ -992,6 +1097,11 @@ stmtS:
     }
 
     | STRING declareListS { if(problem) YYABORT; }
+
+    | STRING ID SWAP exprS {
+        if(problem) YYABORT;
+        else { undeclaredSwappedVarError($2); YYABORT; }
+    }
 ;
 
 declareListS:
@@ -1099,58 +1209,69 @@ exprI:
     }
 
     | ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         undeclaredVariableError($1);
     }
 
     | LPAREN INT RPAREN INT_ID {
+        setLastID($4);
         if(getIntFromIdHelper($4) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | INT_ID {
+        setLastID($1);
         if(getIntFromIdHelper($1) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | LPAREN INT RPAREN FLOAT_ID {
+        setLastID($4);
         if(getIntFromIdHelper($4) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | FLOAT_ID {
+        setLastID($1);
         if(getIntFromIdHelper($1) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | LPAREN INT RPAREN LONG_INT_ID {
+        setLastID($4);
         if(getIntFromIdHelper($4) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | LONG_INT_ID {
+        setLastID($1);
         if(getIntFromIdHelper($1) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | LPAREN INT RPAREN BOOL_ID {
+        setLastID($4);
         if(getIntFromIdHelper($4) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | BOOL_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
     }
 
     | LPAREN INT RPAREN STRING_ID {
+        setLastID($4);
         if(getIntFromIdHelper($4) == 0) $$ = intRes;
         else YYABORT;
     }
 
     | STRING_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
@@ -1215,58 +1336,69 @@ exprF:
     }
 
     | ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         undeclaredVariableError($1);
     }
 
     | LPAREN FLOAT RPAREN FLOAT_ID {
+        setLastID($4);
         if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | FLOAT_ID {
+        setLastID($1);
         if(getFloatFromIdHelper($1) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | LPAREN FLOAT RPAREN INT_ID {
+        setLastID($4);
         if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | INT_ID {
+        setLastID($1);
         if(getFloatFromIdHelper($1) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | LPAREN FLOAT RPAREN LONG_INT_ID {
+        setLastID($4);
         if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | LONG_INT_ID {
+        setLastID($1);
         if(getFloatFromIdHelper($1) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | LPAREN FLOAT RPAREN BOOL_ID {
+        setLastID($4);
         if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | BOOL_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
     }
 
     | LPAREN FLOAT RPAREN STRING_ID {
+        setLastID($4);
         if(getFloatFromIdHelper($4) == 0) $$ = floatRes;
         else YYABORT;
     }
 
     | STRING_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
@@ -1327,58 +1459,69 @@ exprLI:
     }
 
     | ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         undeclaredVariableError($1);
     }
 
     | LPAREN LONG INT RPAREN LONG_INT_ID {
+        setLastID($5);
         if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | LONG_INT_ID {
+        setLastID($1);
         if(getLongIntFromIdHelper($1) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | LPAREN LONG INT RPAREN INT_ID {
+        setLastID($5);
         if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | INT_ID {
+        setLastID($1);
         if(getLongIntFromIdHelper($1) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | LPAREN LONG INT RPAREN FLOAT_ID {
+        setLastID($5);
         if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | FLOAT_ID {
+        setLastID($1);
         if(getLongIntFromIdHelper($1) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | LPAREN LONG INT RPAREN BOOL_ID {
+        setLastID($5);
         if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | BOOL_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
     }
 
     | LPAREN LONG INT RPAREN STRING_ID {
+        setLastID($5);
         if(getLongIntFromIdHelper($5) == 0) $$ = longIntRes;
         else YYABORT;
     }
 
     | STRING_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
@@ -1481,60 +1624,71 @@ exprB:
     }
 
     | ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         undeclaredVariableError($1);
     }
 
     | LPAREN BOOL RPAREN BOOL_ID {
+        setLastID($4);
         if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
         else YYABORT;
     }
 
     | BOOL_ID {
+        setLastID($1);
         if(getBoolFromIdHelper($1) == 0) $$ = boolRes;
         else YYABORT;
     }
 
     | LPAREN BOOL RPAREN INT_ID {
+        setLastID($4);
         if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
         else YYABORT;
     }
 
     | INT_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
     }
 
     | LPAREN BOOL RPAREN FLOAT_ID {
+        setLastID($4);
         if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
         else YYABORT;
     }
 
     | FLOAT_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
     }
 
     | LPAREN BOOL RPAREN LONG_INT_ID {
+        setLastID($4);
         if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
         else YYABORT;
     }
 
     | LONG_INT_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
     }
 
     | LPAREN BOOL RPAREN STRING_ID {
+        setLastID($4);
         if(getBoolFromIdHelper($4) == 0) $$ = boolRes;
         else YYABORT;
     }
 
     | STRING_ID {
+        setLastID($1);
         problem = 1;
         $$ = 0;
         invalidCastingError();
@@ -1560,52 +1714,62 @@ exprS:
     | BOOL_VAL { char* val = boolToString($1, $$); $$ = val; }
 
     | ID {
+        setLastID($1);
         problem = 1;
         $$ = "";
         undeclaredVariableError($1);
     }
 
     | LPAREN STRING RPAREN INT_ID {
+        setLastID($4);
         if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | INT_ID {
+        setLastID($1);
         if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LPAREN STRING RPAREN FLOAT_ID {
+        setLastID($4);
         if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | FLOAT_ID {
+        setLastID($1);
         if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LPAREN STRING RPAREN LONG_INT_ID {
+        setLastID($4);
         if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LONG_INT_ID {
+        setLastID($1);
         if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LPAREN STRING RPAREN BOOL_ID {
+        setLastID($4);
         if(getStringFromIdHelper($4) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | BOOL_ID {
+        setLastID($1);
         if(getStringFromIdHelper($1) == 0) { $$ = strdup(stringRes); free(stringRes); }
         else YYABORT;
     }
 
     | LPAREN STRING RPAREN STRING_ID {
+        setLastID($4);
         int is_found = NOT_FOUND;
         char* res = getStringFromId($4, &is_found);
         if(is_found == FOUND) {
@@ -1620,6 +1784,7 @@ exprS:
     }
 
     | STRING_ID {
+        setLastID($1);
         int is_found = NOT_FOUND;
         char* res = getStringFromId($1, &is_found);
         if(is_found == FOUND) {
@@ -1635,11 +1800,13 @@ exprS:
 
     // maybe i can add exprI COLON exprI COLON exprI where second exprI is step
     | STRING_ID LPAREN RPAREN {
+        setLastID($1);
         $$ = str("");
         free($1);
     }
 
     | STRING_ID LPAREN exprI RPAREN {
+        setLastID($1);
         int is_found = NOT_FOUND;
         char* res = getStringFromId($1, &is_found);
         $$ = charToString(enhancedCharAt(res,$3));
@@ -1648,6 +1815,7 @@ exprS:
     }
 
     | STRING_ID LPAREN COLON RPAREN {
+        setLastID($1);
         int is_found = NOT_FOUND;
         char* res = getStringFromId($1, &is_found);
         $$ = enhancedSubString(res, 0, strlen(res) - 1);
@@ -1656,6 +1824,7 @@ exprS:
     }
 
     | STRING_ID LPAREN COLON exprI RPAREN {
+        setLastID($1);
         int is_found = NOT_FOUND;
         char* res = getStringFromId($1, &is_found);
         $$ = enhancedSubString(res, 0, $4);
@@ -1664,6 +1833,7 @@ exprS:
     }
     
     | STRING_ID LPAREN exprI COLON RPAREN {
+        setLastID($1);
         int is_found = NOT_FOUND;
         char* res = getStringFromId($1, &is_found);
         $$ = enhancedSubString(res, $3, strlen(res) - 1);
@@ -1672,6 +1842,7 @@ exprS:
     }
 
     | STRING_ID LPAREN exprI COLON exprI RPAREN {
+        setLastID($1);
         int is_found = NOT_FOUND;
         char* res = getStringFromId($1, &is_found);
         $$ = enhancedSubString(res, $3, $5);
@@ -1695,11 +1866,6 @@ int main(int argc, char** argv) {
     elseExprStack = createIntStack(name3);
     char* name4 = str("whileExprStack");
     whileExprStack = createIntStack(name4);
-    /* printf("---|%s|---\n", stringRes);
-    equall(&stringRes, "hello");
-    printf("---|%s|---\n", stringRes);
-    equall(&stringRes, "");
-    printf("---|%s|---\n", stringRes); */
 
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
@@ -1712,8 +1878,7 @@ int main(int argc, char** argv) {
     freeIntStack(ifSkipBlockStack);
     freeIntStack(elseExprStack);
     freeIntStack(whileExprStack);
-    /* free(stringRes);
-    stringRes = NULL; */
+    free(lastID);
     return 0;
 }
 

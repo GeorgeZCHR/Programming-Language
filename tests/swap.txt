@@ -1,0 +1,27 @@
+// Swap Testing
+
+print("----------Before Swap----------");
+int a1, a2 = 10;
+float b1, b2 = 5.5;
+long int c1, c2 = 30000000;
+bool d1, d2 = false;
+string e1, e2 = "geo";
+print all
+
+print("----------After Swap----------");
+a1 <=> a2;
+b1 <=> b2;
+c1 <=> c2;
+d1 <=> d2;
+e1 <=> e2;
+print all
+
+// You can do more than just ids on the right
+// Example
+
+long int num = 34567890;
+string s;
+s <=> (string)num;
+print s
+
+exit
