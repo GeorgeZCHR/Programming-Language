@@ -221,7 +221,7 @@ int appendBool(const char* label, int value) {
     return 1;
 }
 
-int appendString(const char* label, const char* value) {
+int appendString(const char* label, char* value) {
     if(checkOtherTables(label, STRING_TYPE) == -1) return -1;
     int idx = getStringIndex(label);
     if(idx == INDEX_NOT_FOUND) {
@@ -267,7 +267,7 @@ int setBool(const char* label, int value) {
     return UNDECLARED_P;
 }
 
-int setString(const char* label, const char* value) {
+int setString(const char* label, char* value) {
     int idx = getStringIndex(label);
     if (idx != INDEX_NOT_FOUND) { equall(&stringTable[idx].value, value); free(value); return DECLARED; }
     free(value);
@@ -356,21 +356,21 @@ int setVarFromId(const char* p_label, const char* s_label) {
     if(p_idx != INDEX_NOT_FOUND) {
         s_idx = getIntIndex(s_label);
         if(s_idx != INDEX_NOT_FOUND) {
-            char* str_num = intToString(intTable[s_idx].value, str_num);
+            char* str_num = intToString(intTable[s_idx].value);
             equall(&stringTable[p_idx].value, str_num);
             free(str_num);
             return DECLARED;
         }
         s_idx = getFloatIndex(s_label);
         if(s_idx != INDEX_NOT_FOUND) {
-            char* str_num = floatToString(floatTable[s_idx].value, str_num);
+            char* str_num = floatToString(floatTable[s_idx].value);
             equall(&stringTable[p_idx].value, str_num);
             free(str_num);
             return DECLARED;
         }
         s_idx = getLongIntIndex(s_label);
         if(s_idx != INDEX_NOT_FOUND) {
-            char* str_num = longIntToString(longIntTable[s_idx].value, str_num);
+            char* str_num = longIntToString(longIntTable[s_idx].value);
             equall(&stringTable[p_idx].value, str_num);
             free(str_num);
             return DECLARED;
@@ -456,25 +456,25 @@ char* getStringFromId(const char* label, int* is_found) {
     idx = getIntIndex(label);
     if(idx != INDEX_NOT_FOUND) {
         *is_found = FOUND;
-        char* str_num = intToString(intTable[idx].value, str_num);
+        char* str_num = intToString(intTable[idx].value);
         return str_num;
     }
     idx = getFloatIndex(label);
     if(idx != INDEX_NOT_FOUND) {
         *is_found = FOUND;
-        char* str_num = floatToString(floatTable[idx].value, str_num);
+        char* str_num = floatToString(floatTable[idx].value);
         return str_num;
     }
     idx = getLongIntIndex(label);
     if(idx != INDEX_NOT_FOUND) {
         *is_found = FOUND;
-        char* str_num = longIntToString(longIntTable[idx].value, str_num);
+        char* str_num = longIntToString(longIntTable[idx].value);
         return str_num;
     }
     idx = getBoolIndex(label);
     if(idx != INDEX_NOT_FOUND) {
         *is_found = FOUND;
-        char* str_num = boolToString(boolTable[idx].value, str_num);
+        char* str_num = boolToString(boolTable[idx].value);
         return str_num;
     }
     idx = getStringIndex(label);

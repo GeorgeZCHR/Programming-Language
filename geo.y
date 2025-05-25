@@ -2,13 +2,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <math.h>
+#include <unistd.h>
+#include <sys/select.h>
 #include "include/colors.h"
 #include "include/strman.h"
 #include "include/types.h"
 #include "include/safe_math.h"
 #include "include/element.h"
 #include "include/stack.h"
+#include "include/scanner.h"
 
 #define BLOCK_OK 0
 #define BLOCK_SKIP 1
@@ -23,6 +27,8 @@ int loop = 0;
 // πρεπει να βρω τροπο το skip_block να το κραταω για οσο ειμαι μεσα σε if και οταν τελειωσει να φευγει
 // η καλυτερη λυση μου ειναι stack απλως δεν ξερω ποτε να το βγαλω δεν εχω βρει καποιο triger
 
+// I need to protect the scan() from wrong types or buffer overflow
+
 extern FILE *yyin;
 extern int yylineno;
 extern int col;
@@ -31,6 +37,7 @@ extern char* yytext;
 extern int parse_subfile(const char* filename);
 
 extern int temp_if_res;
+extern int nan_error;
 
 IntStack* ifExprStack = NULL;
 IntStack* ifSkipBlockStack = NULL;
@@ -43,6 +50,23 @@ long int longIntRes;
 int boolRes;
 char* stringRes = NULL;
 char* lastID = NULL;
+
+// Chat-GPT obviously :)
+void flush_stdin() {
+    struct timeval tv = {0, 0}; // No wait
+    fd_set fds;
+    int ch;
+
+    do {
+        FD_ZERO(&fds);
+        FD_SET(STDIN_FILENO, &fds);
+        if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0) {
+            while ((ch = getchar()) != EOF && ch != '\n');
+        } else {
+            break;
+        }
+    } while (1);
+}
 
 void intAssignment(char* id, int value) {
     if(problem) free(id);
@@ -193,34 +217,30 @@ int checkPreviousWhiles() {
     return 1;
 }
 
-void divWithZeroError() {
-    yyerror(str("division with 0 as denominator error"));
-}
+void syntaxError() { yyerror(str("syntax error")); }
 
-void modWithZeroError() {
-    yyerror(str("modulus with 0 as denominator error"));
-}
+void divWithZeroError() { yyerror(str("division with 0 as denominator error")); }
 
-void tooBigNumError() {
-    yyerror(str("too long number error"));
-}
+void modWithZeroError() { yyerror(str("modulus with 0 as denominator error")); }
 
-void undeclaredVariableError(const char* id) {
+void tooBigNumError() { yyerror(str("too long number error")); }
+
+void invalidCastingError() { yyerror(str("invalid casting error")); }
+
+void nanError() { yyerror(str("not a number error")); }
+
+void undeclaredVariableError(char* id) {
     char* errorMes = str("undeclared variable ");
     concat(&errorMes, id);
     free(id);
     yyerror(errorMes);
 }
 
-void undeclaredSwappedVarError(const char* id) {
+void undeclaredSwappedVarError(char* id) {
     char* errorMes = str("undeclared and swapped ");
     concat(&errorMes, id);
     free(id);
     yyerror(errorMes);
-}
-
-void invalidCastingError() {
-    yyerror(str("invalid casting error"));
 }
 
 int getIntFromIdHelper(char* id) {
@@ -314,8 +334,8 @@ void setLastID(char* id) {
 %token LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE SEM ASSIGN COMMA COLON
 %token EQ NEQ GT LT GTE LTE AND OR NOT SWAP
 %token IF ELSE WHILE BLOCK INCLUDE
-%token PRINT INT LONG FLOAT STRING BOOL ALL ERROR EXIT
-%token TOO_LONG_NUMBER_ERR
+%token PRINT SCAN INT LONG FLOAT STRING BOOL ALL ERROR EXIT
+%token TOO_LONG_NUMBER_ERR NOT_A_NUM
 
 %right UMINUS UPLUS
 %left PLUS MINUS
@@ -542,7 +562,7 @@ errors:
         YYABORT;
     }
 
-    | ERROR { yyerror("syntax error"); YYABORT; }
+    | ERROR { syntaxError(); YYABORT; }
 ;
 
 assignmentErrors:
@@ -563,7 +583,7 @@ printFunc:
         }
         else if(peekInt(ifSkipBlockStack)) free($3);
         else {
-            printf("%s%s%s\n", C_ORANGE, $3, C_RESET);
+            printf("%s%s%s", C_ORANGE, $3, C_RESET);
             free($3);
         }
     }
@@ -572,15 +592,38 @@ printFunc:
 // i did it only for int now i have to do it for float, long int, bool, string
 stmtI:
     INT_ID ASSIGN exprI {
-        if(problem) {
+        if(problem || nan_error) {
             free($1);
             YYABORT;
         }
-        else if(peekInt(ifSkipBlockStack)) free($1);
         else {
             setInt($1, $3);
             free($1);
         }
+    }
+
+    | INT_ID ASSIGN SCAN LPAREN RPAREN {
+        int temp = scan_int("");
+        if(nan_error) {
+            free($1);
+            nanError();
+            YYABORT;
+        }
+        setInt($1, temp);
+        free($1);
+    }
+
+    | INT_ID ASSIGN SCAN LPAREN exprS RPAREN {
+        int temp = scan_int($5);
+        if(nan_error) {
+            free($1);
+            free($5);
+            nanError();
+            YYABORT;
+        }
+        setInt($1, temp);
+        free($1);
+        free($5);
     }
 
     | INT_ID ASSIGN idAssignmentsI {
@@ -588,10 +631,6 @@ stmtI:
             free($1);
             free($3);
             YYABORT;
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            free($1);
-            free($3);
         }
         else {
             setVarFromId($1, $3);
@@ -611,7 +650,7 @@ stmtI:
         YYABORT;
     }
 
-    | INT declareListI { if(problem) YYABORT; }
+    | INT declareListI { if(problem || nan_error) YYABORT; }
 
     | INT ID SWAP exprI {
         if(problem) YYABORT;
@@ -625,24 +664,44 @@ declareListI:
 ;
 
 assignmentI:
-    ID ASSIGN exprI { intAssignment($1, $3); }
+    ID ASSIGN exprI {
+        if(nan_error) intAssignment($1, 0);
+        else intAssignment($1, $3);
+    }
 
-    | ID { intAssignment($1,  0); }
+    | ID ASSIGN SCAN LPAREN RPAREN {
+        int temp = scan_int("");
+        if(nan_error) { nanError(); YYABORT; }
+        intAssignment($1, temp);
+    }
+
+    | ID ASSIGN SCAN LPAREN exprS RPAREN {
+        int temp = scan_int($5);
+        if(nan_error) {
+            free($5);
+            nanError();
+            YYABORT;
+        }
+        free($5);
+        intAssignment($1, temp);
+    }
+
+    | ID { intAssignment($1, 0); }
 
     | INT_ID ASSIGN exprI {
+        problem = 1;
         char* errorMes = str("allready declared variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 
     | NOT_INT_ID ASSIGN exprI {
+        problem = 1;
         char* errorMes = str("allready declared with other type variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 ;
 
@@ -656,10 +715,6 @@ NOT_INT_ID:
 idAssignmentsI:
     INT_ID ASSIGN idAssignmentsI {
         if(problem) {
-            $$ = $1;
-            free($3);
-        }
-        else if(peekInt(ifSkipBlockStack)) {
             $$ = $1;
             free($3);
         }
@@ -692,15 +747,38 @@ idAssignmentsI:
 
 stmtF:
     FLOAT_ID ASSIGN exprF {
-        if(problem) {
+        if(problem || nan_error) {
             free($1);
             YYABORT;
         }
-        else if(peekInt(ifSkipBlockStack)) free($1);
         else {
             setFloat($1, $3);
             free($1);
         }
+    }
+
+    | FLOAT_ID ASSIGN SCAN LPAREN RPAREN {
+        float temp = scan_float("");
+        if(nan_error) {
+            free($1);
+            nanError();
+            YYABORT;
+        }
+        setFloat($1, temp);
+        free($1);
+    }
+
+    | FLOAT_ID ASSIGN SCAN LPAREN exprS RPAREN {
+        float temp = scan_float($5);
+        if(nan_error) {
+            free($1);
+            free($5);
+            nanError();
+            YYABORT;
+        }
+        setFloat($1, temp);
+        free($1);
+        free($5);
     }
 
     | FLOAT_ID ASSIGN idAssignmentsF {
@@ -708,10 +786,6 @@ stmtF:
             free($1);
             free($3);
             YYABORT;
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            free($1);
-            free($3);
         }
         else {
             setVarFromId($1, $3);
@@ -731,7 +805,7 @@ stmtF:
         YYABORT;
     }
 
-    | FLOAT declareListF { if(problem) YYABORT; }
+    | FLOAT declareListF { if(problem || nan_error) YYABORT; }
 
     | FLOAT ID SWAP exprF {
         if(problem) YYABORT;
@@ -745,24 +819,44 @@ declareListF:
 ;
 
 assignmentF:
-    ID ASSIGN exprF { floatAssignment($1, $3); }
+    ID ASSIGN exprF {
+        if(nan_error) floatAssignment($1, 0);
+        floatAssignment($1, $3);
+    }
+
+    | ID ASSIGN SCAN LPAREN RPAREN {
+        float temp = scan_float("");
+        if(nan_error) { nanError(); YYABORT; }
+        floatAssignment($1, temp);
+    }
+
+    | ID ASSIGN SCAN LPAREN exprS RPAREN {
+        float temp = scan_float($5);
+        if(nan_error) {
+            free($5);
+            nanError();
+            YYABORT;
+        }
+        free($5);
+        floatAssignment($1, temp);
+    }
 
     | ID { floatAssignment($1, 0); }
 
     | FLOAT_ID ASSIGN exprF {
+        problem = 1;
         char* errorMes = str("allready declared variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 
     | NOT_FLOAT_ID ASSIGN exprF {
+        problem = 1;
         char* errorMes = str("allready declared with other type variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 ;
 
@@ -776,10 +870,6 @@ NOT_FLOAT_ID:
 idAssignmentsF:
     FLOAT_ID ASSIGN idAssignmentsF {
         if(problem) {
-            $$ = $1;
-            free($3);
-        }
-        else if(peekInt(ifSkipBlockStack)) {
             $$ = $1;
             free($3);
         }
@@ -812,15 +902,29 @@ idAssignmentsF:
 
 stmtLI:
     LONG_INT_ID ASSIGN exprLI {
-        if(problem) {
+        if(problem || nan_error) {
             free($1);
             YYABORT;
         }
-        else if(peekInt(ifSkipBlockStack)) free($1);
         else {
             setLongInt($1, $3);
             free($1);
         }
+    }
+
+    | LONG_INT_ID ASSIGN SCAN LPAREN RPAREN {
+        long int temp = scan_long_int("");
+        if(nan_error) { free($1); nanError(); YYABORT; }
+        setLongInt($1, temp);
+        free($1);
+    }
+
+    | LONG_INT_ID ASSIGN SCAN LPAREN exprS RPAREN {
+        long int temp = scan_long_int($5);
+        if(nan_error) { free($1); free($5); nanError(); YYABORT; }
+        setLongInt($1, temp);
+        free($1);
+        free($5);
     }
 
     | LONG_INT_ID ASSIGN idAssignmentsLI {
@@ -828,10 +932,6 @@ stmtLI:
             free($1);
             free($3);
             YYABORT;
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            free($1);
-            free($3);
         }
         else {
             setVarFromId($1, $3);
@@ -851,7 +951,7 @@ stmtLI:
         YYABORT;
     }
 
-    | LONG INT declareListLI { if(problem) YYABORT; }
+    | LONG INT declareListLI { if(problem || nan_error) YYABORT; }
 
     | LONG INT ID SWAP exprLI {
         if(problem) YYABORT;
@@ -865,24 +965,40 @@ declareListLI:
 ;
 
 assignmentLI:
-    ID ASSIGN exprLI { longIntAssignment($1, $3); }
+    ID ASSIGN exprLI {
+        if(nan_error) longIntAssignment($1, 0);
+        longIntAssignment($1, $3);
+    }
+
+    | ID ASSIGN SCAN LPAREN RPAREN {
+        long int temp = scan_long_int("");
+        if(nan_error) { nanError(); YYABORT; }
+        longIntAssignment($1, temp);
+    }
+
+    | ID ASSIGN SCAN LPAREN exprS RPAREN {
+        long int temp = scan_long_int($5);
+        if(nan_error) { free($5); nanError(); YYABORT; }
+        free($5);
+        longIntAssignment($1, temp);
+    }
 
     | ID { longIntAssignment($1, 0); }
 
     | LONG_INT_ID ASSIGN exprLI {
+        problem = 1;
         char* errorMes = str("allready declared variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 
     | NOT_LONG_INT_ID ASSIGN exprLI {
+        problem = 1;
         char* errorMes = str("allready declared with other type variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 ;
 
@@ -896,10 +1012,6 @@ NOT_LONG_INT_ID:
 idAssignmentsLI:
     LONG_INT_ID ASSIGN idAssignmentsLI {
         if(problem) {
-            $$ = $1;
-            free($3);
-        }
-        else if(peekInt(ifSkipBlockStack)) {
             $$ = $1;
             free($3);
         }
@@ -936,11 +1048,26 @@ stmtB:
             free($1);
             YYABORT;
         }
-        else if(peekInt(ifSkipBlockStack)) free($1);
         else {
             setBool($1, $3);
             free($1);
         }
+    }
+
+    | BOOL_ID ASSIGN SCAN LPAREN RPAREN {
+        /* int temp;
+        scanf("%d", &temp);
+        setBool($1, temp);
+        free($1); */
+    }
+
+    | BOOL_ID ASSIGN SCAN LPAREN exprS RPAREN {
+        /* int temp;
+        printf("%s", $5);
+        free($5);
+        scanf("%d", &temp);
+        setBool($1, temp);
+        free($1); */
     }
 
     | BOOL_ID ASSIGN idAssignmentsB {
@@ -948,10 +1075,6 @@ stmtB:
             free($1);
             free($3);
             YYABORT;
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            free($1);
-            free($3);
         }
         else {
             setVarFromId($1, $3);
@@ -987,22 +1110,36 @@ declareListB:
 assignmentB:
     ID ASSIGN exprB { boolAssignment($1, $3); }
 
+    | ID ASSIGN SCAN LPAREN RPAREN {
+        /* int temp;
+        scanf("%d", &temp);
+        boolAssignment($1, temp); */
+    }
+
+    | ID ASSIGN SCAN LPAREN exprS RPAREN {
+        /* int temp;
+        printf("%s", $5);
+        free($5);
+        scanf("%d", &temp);
+        boolAssignment($1, temp); */
+    }
+
     | ID { boolAssignment($1, TRUE_VAL); }
 
     | BOOL_ID ASSIGN exprB {
+        problem = 1;
         char* errorMes = str("allready declared variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 
     | NOT_BOOL_ID ASSIGN exprB {
+        problem = 1;
         char* errorMes = str("allready declared with other type variable ");
         concat(&errorMes, $1);
         free($1);
         yyerror(errorMes);
-        YYABORT;
     }
 ;
 
@@ -1018,12 +1155,7 @@ idAssignmentsB:
         if(problem) {
             $$ = $1;
             free($3);
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            $$ = $1;
-            free($3);
-        }
-        else {
+        } else {
             setVarFromId($1, $3);
             $$ = $1;
             free($3);
@@ -1056,15 +1188,26 @@ stmtS:
             free($1);
             free($3);
             YYABORT;
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            free($1);
-            free($3);
-        }
-        else {
+        } else {
             setString($1, $3);
             free($1);
         }
+    }
+
+    | STRING_ID ASSIGN SCAN LPAREN RPAREN {
+        /* char* temp;
+        scanf("%s", &temp);
+        setString($1, temp);
+        free($1); */
+    }
+
+    | STRING_ID ASSIGN SCAN LPAREN exprS RPAREN {
+        /* char* temp;
+        printf("%s", $5);
+        free($5);
+        scanf("%s", &temp);
+        setString($1, temp);
+        free($1); */
     }
 
     | STRING_ID ASSIGN idAssignmentsS {
@@ -1072,12 +1215,7 @@ stmtS:
             free($1);
             free($3);
             YYABORT;
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            free($1);
-            free($3);
-        }
-        else {
+        } else {
             setVarFromId($1, $3);
             free($1);
             free($3);
@@ -1112,6 +1250,20 @@ declareListS:
 assignmentS:
     ID ASSIGN exprS { stringAssignment($1, $3); }
 
+    | ID ASSIGN SCAN LPAREN RPAREN {
+        /* char* temp;
+        scanf("%s", &temp);
+        stringAssignment($1, temp); */
+    }
+
+    | ID ASSIGN SCAN LPAREN exprS RPAREN {
+        /* char* temp;
+        printf("%s", $5);
+        free($5);
+        scanf("%s", &temp);
+        stringAssignment($1, temp); */
+    }
+
     | ID {
         char* str = NULL;
         equall(&str, "");
@@ -1119,21 +1271,21 @@ assignmentS:
     }
 
     | STRING_ID ASSIGN exprS {
+        problem = 1;
         char* errorMes = str("allready declared variable ");
         concat(&errorMes, $1);
         free($1);
         free($3);
         yyerror(errorMes);
-        YYABORT;
     }
 
     | NOT_STRING_ID ASSIGN exprS {
+        problem = 1;
         char* errorMes = str("allready declared with other type variable ");
         concat(&errorMes, $1);
         free($1);
         free($3);
         yyerror(errorMes);
-        YYABORT;
     }
 ;
 
@@ -1149,12 +1301,7 @@ idAssignmentsS:
         if(problem) {
             $$ = $1;
             free($3);
-        }
-        else if(peekInt(ifSkipBlockStack)) {
-            $$ = $1;
-            free($3);
-        }
-        else {
+        } else {
             setVarFromId($1, $3);
             $$ = $1;
             free($3);
@@ -1182,7 +1329,9 @@ idAssignmentsS:
 ;
 
 exprI:
-    LPAREN INT RPAREN INT_NUM { $$ = $4; }
+    NOT_A_NUM { nan_error = 1; nanError(); $$ = 0; }
+
+    | LPAREN INT RPAREN INT_NUM { $$ = $4; }
     | INT_NUM { $$ = $1; }
 
     | LPAREN INT RPAREN FLOAT_NUM { $$ = (int)$4; }
@@ -1309,7 +1458,9 @@ exprI:
 ;
 
 exprF:
-    LPAREN FLOAT RPAREN FLOAT_NUM { $$ = $4; }
+    NOT_A_NUM { nan_error = 1; nanError(); $$ = 0; }
+
+    | LPAREN FLOAT RPAREN FLOAT_NUM { $$ = $4; }
     | FLOAT_NUM { $$ = $1; }
 
     | LPAREN FLOAT RPAREN INT_NUM { $$ = $4; }
@@ -1432,7 +1583,9 @@ exprF:
 
 // I need to put more safety If possible
 exprLI:
-    LPAREN LONG INT RPAREN LONG_INT_NUM { $$ = $5; }
+    NOT_A_NUM { nan_error = 1; nanError(); $$ = 0; }
+
+    | LPAREN LONG INT RPAREN LONG_INT_NUM { $$ = $5; }
     | LONG_INT_NUM { $$ = $1; }
 
     | LPAREN LONG INT RPAREN INT_NUM { $$ = (long int)$5; }
@@ -1527,7 +1680,7 @@ exprLI:
         invalidCastingError();
     }
 
-    | exprLI PLUS exprLI { $$ = $1 + $3; }
+    | exprLI PLUS exprLI { printf("-N%ld\n",$1); printf("-N%ld\n",$3); $$ = longIntAdd($1, $3); }
 
     | exprLI MINUS exprLI { $$ = $1 - $3; }
 
@@ -1701,17 +1854,17 @@ exprS:
     | LPAREN STRING RPAREN STRING_VAL { $$ = $4; }
     | STRING_VAL { $$ = $1; }
 
-    | LPAREN STRING RPAREN INT_NUM { char* num = intToString($4, num); $$ = num; }
-    | INT_NUM { char* num = intToString($1, num); $$ = num; }
+    | LPAREN STRING RPAREN INT_NUM { char* num = intToString($4); $$ = num; }
+    | INT_NUM { char* num = intToString($1); $$ = num; }
 
-    | LPAREN STRING RPAREN FLOAT_NUM { char* num = floatToString($4, num); $$ = num; }
-    | FLOAT_NUM { char* num = floatToString($1, $$); $$ = num; }
+    | LPAREN STRING RPAREN FLOAT_NUM { char* num = floatToString($4); $$ = num; }
+    | FLOAT_NUM { char* num = floatToString($1); $$ = num; }
 
-    | LPAREN STRING RPAREN LONG_INT_NUM { char* num = longIntToString($4, num); $$ = num; }
-    | LONG_INT_NUM { char* num = longIntToString($1, $$); $$ = num; }
+    | LPAREN STRING RPAREN LONG_INT_NUM { char* num = longIntToString($4); $$ = num; }
+    | LONG_INT_NUM { char* num = longIntToString($1); $$ = num; }
 
-    | LPAREN STRING RPAREN BOOL_VAL { char* num = boolToString($4, num); $$ = num; }
-    | BOOL_VAL { char* val = boolToString($1, $$); $$ = val; }
+    | LPAREN STRING RPAREN BOOL_VAL { char* num = boolToString($4); $$ = num; }
+    | BOOL_VAL { char* val = boolToString($1); $$ = val; }
 
     | ID {
         setLastID($1);
@@ -1872,6 +2025,7 @@ int main(int argc, char** argv) {
         if (!yyin) { perror("Cannot open file"); return 1; }
     } else yyin = stdin; // fallback to keyboard input
 
+    flush_stdin();
     yyparse();
     freeAllMemory();
     freeIntStack(ifExprStack);
@@ -1884,7 +2038,8 @@ int main(int argc, char** argv) {
 
 // i have to colorize the msg from the begging not now except if i make a temp
 int yyerror(char* msg) {
-    printf("%s%s%s:%d in %s\n", C_RED, C_RESET, msg, yylineno, yytext);
+    printf("%s%s%s:%s%d %sbefore/after %s%s%s\n",
+    C_RED, msg, C_MAGENTA, C_CYAN_B, yylineno, C_MAGENTA, C_ORANGE, yytext, C_RESET);
     free(msg);
     return 1;
 }

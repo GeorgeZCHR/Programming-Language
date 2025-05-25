@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <float.h>
 #include "geo.tab.h"
 #include "include/safe_math.h"
@@ -165,6 +166,7 @@ noBraces          ([^{}]|\n)
         }
 
 "print"     { col += yyleng; return PRINT; }
+"scan"      { col += yyleng; return SCAN; }
 "long"      { col += yyleng; return LONG; }
 "int"       { col += yyleng; return INT; }
 "float"     { col += yyleng; return FLOAT; }
@@ -190,17 +192,28 @@ noBraces          ([^{}]|\n)
 "exit"  { col += yyleng; return EXIT; }
 
 {number}  {
-              col += yyleng;
-              int type = checkInteger(yytext);
-              if(type == T_INT) {
-                  yylval.intVal = atoi(yytext);
-                  return INT_NUM;
-              }
-              if(type == T_LONG_INT) {
-                  yylval.longIntVal = atol(yytext);
-                  return LONG_INT_NUM;
-              }
-              return TOO_LONG_NUMBER_ERR;
+            col += yyleng;
+            int type = checkInteger(yytext);
+            if(type == T_INT) {
+                printf("here\n");
+                yylval.intVal = atoi(yytext);
+                return INT_NUM;
+            }
+            if(type == T_LONG_INT) {
+                yylval.longIntVal = atol(yytext);
+                return LONG_INT_NUM;
+            }
+            if(type == IT_IS_MAX_LONG_INT) {
+                yylval.longIntVal = MAX_LONG_INT;
+                return LONG_INT_NUM;
+            }
+            if(type == IT_IS_MIN_LONG_INT) {
+                yylval.longIntVal = MIN_LONG_INT;
+                return LONG_INT_NUM;
+            }
+            if(type == NOT_A_NUMBER) {
+                return NOT_A_NUM;
+            }
           }
 
 {numberWithDecimal} {

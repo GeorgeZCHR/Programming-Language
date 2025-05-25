@@ -145,29 +145,33 @@ void concat(char** ptr, const char* text) {
     }
 }
 
-char* intToString(int num, char* str) {
+char* intToString(int num) {
+    char* str = NULL;
     asprintf(&str, "%d", num); // ONLY in GNU the asprintf()
     return str;
 }
 
-char* floatToString(float num, char* str) {
+char* floatToString(float num) {
+    char* str = NULL;
     asprintf(&str, "%f", num); // ONLY in GNU the asprintf()
     return str;
 }
 
-char* longIntToString(long int num, char* str) {
+char* longIntToString(long int num) {
+    char* str = NULL;
     asprintf(&str, "%ld", num); // ONLY in GNU the asprintf()
     return str;
 }
 
-char* boolToString(int num, char* str) {
+char* boolToString(int num) {
+    char* str = NULL;
     if(num == FALSE_VAL) asprintf(&str, "%s", "false");  // ONLY in GNU the asprintf()
     else                 asprintf(&str, "%s", "true");   // ONLY in GNU the asprintf()
     return str;
 }
 
 char* charToString(const char c) {
-    char* str;
+    char* str = NULL;
     if(c != '\0') { str = allocStr(2); str[0] = c; str[1] = '\0'; }
     else          { str = allocStr(1); str[0] = '\0'; }
     return str;
