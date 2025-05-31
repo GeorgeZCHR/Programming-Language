@@ -1,5 +1,5 @@
 // Scanner testing
-/*
+
 // Int
 // First way
 print("Type an integer.. ");
@@ -17,7 +17,7 @@ a3 = scan("Give an integer.. ");
 // Forth way
 int a4 = scan("Give an integer.. ");
 print int
-*/
+
 
 
 // Float
@@ -59,7 +59,7 @@ long int c4 = scan("Give a long int number.. ");
 print long int
 
 
-/*
+
 // Bool
 // First way
 print("Type a bool.. ");
@@ -77,9 +77,9 @@ d3 = scan("Give a bool.. ");
 // Forth way
 bool d4 = scan("Give a bool.. ");
 print bool
-*/
 
-/*
+
+
 // String
 // First way
 print("Type a string.. ");
@@ -97,6 +97,5 @@ e3 = scan("Give a string.. ");
 // Forth way
 string e4 = scan("Give a string.. ");
 print string
-*/
 
 exit

@@ -195,23 +195,27 @@ noBraces          ([^{}]|\n)
             col += yyleng;
             int type = checkInteger(yytext);
             if(type == T_INT) {
-                printf("here\n");
+                //printf("int\n");
                 yylval.intVal = atoi(yytext);
                 return INT_NUM;
             }
             if(type == T_LONG_INT) {
+                //printf("long int\n");
                 yylval.longIntVal = atol(yytext);
                 return LONG_INT_NUM;
             }
             if(type == IT_IS_MAX_LONG_INT) {
+                //printf("long int max\n");
                 yylval.longIntVal = MAX_LONG_INT;
                 return LONG_INT_NUM;
             }
             if(type == IT_IS_MIN_LONG_INT) {
+                //printf("long int min\n");
                 yylval.longIntVal = MIN_LONG_INT;
                 return LONG_INT_NUM;
             }
             if(type == NOT_A_NUMBER) {
+                //printf("not a num\n");
                 return NOT_A_NUM;
             }
           }

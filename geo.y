@@ -13,6 +13,7 @@
 #include "include/element.h"
 #include "include/stack.h"
 #include "include/scanner.h"
+#include "long_long_int.h"
 
 #define BLOCK_OK 0
 #define BLOCK_SKIP 1
@@ -29,6 +30,8 @@ int loop = 0;
 
 // I need to protect the scan() from wrong types or buffer overflow
 
+// There is no protection against buffer overflow for long int when there are exprs like add,sub,mul,....
+
 extern FILE *yyin;
 extern int yylineno;
 extern int col;
@@ -38,6 +41,8 @@ extern int parse_subfile(const char* filename);
 
 extern int temp_if_res;
 extern int nan_error;
+extern int nab_error;
+extern int nas_error;
 
 IntStack* ifExprStack = NULL;
 IntStack* ifSkipBlockStack = NULL;
@@ -228,6 +233,22 @@ void tooBigNumError() { yyerror(str("too long number error")); }
 void invalidCastingError() { yyerror(str("invalid casting error")); }
 
 void nanError() { yyerror(str("not a number error")); }
+
+void nabError() { yyerror(str("not a boolean error")); }
+
+void nasError() { yyerror(str("not a string error")); }
+
+void allreadyDeclaredVarError(char* id) {
+    char* errorMes = str("allready declared variable ");
+    concat(&errorMes, id);
+    yyerror(errorMes);
+}
+
+void allreadyDeclaredWithOtherTypeVarError(char* id) {
+    char* errorMes = str("allready declared with other type variable ");
+    concat(&errorMes, id);
+    yyerror(errorMes);
+}
 
 void undeclaredVariableError(char* id) {
     char* errorMes = str("undeclared variable ");
@@ -671,13 +692,20 @@ assignmentI:
 
     | ID ASSIGN SCAN LPAREN RPAREN {
         int temp = scan_int("");
-        if(nan_error) { nanError(); YYABORT; }
+        if(nan_error) { free($1); nanError(); YYABORT; }
+        intAssignment($1, temp);
+    }
+
+    | INT_ID ASSIGN SCAN LPAREN RPAREN {
+        int temp = scan_int("");
+        if(nan_error) { free($1); nanError(); YYABORT; }
         intAssignment($1, temp);
     }
 
     | ID ASSIGN SCAN LPAREN exprS RPAREN {
         int temp = scan_int($5);
         if(nan_error) {
+            free($1);
             free($5);
             nanError();
             YYABORT;
@@ -690,18 +718,14 @@ assignmentI:
 
     | INT_ID ASSIGN exprI {
         problem = 1;
-        char* errorMes = str("allready declared variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 
     | NOT_INT_ID ASSIGN exprI {
         problem = 1;
-        char* errorMes = str("allready declared with other type variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredWithOtherTypeVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 ;
 
@@ -826,13 +850,14 @@ assignmentF:
 
     | ID ASSIGN SCAN LPAREN RPAREN {
         float temp = scan_float("");
-        if(nan_error) { nanError(); YYABORT; }
+        if(nan_error) { free($1); nanError(); YYABORT; }
         floatAssignment($1, temp);
     }
 
     | ID ASSIGN SCAN LPAREN exprS RPAREN {
         float temp = scan_float($5);
         if(nan_error) {
+            free($1);
             free($5);
             nanError();
             YYABORT;
@@ -845,18 +870,14 @@ assignmentF:
 
     | FLOAT_ID ASSIGN exprF {
         problem = 1;
-        char* errorMes = str("allready declared variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 
     | NOT_FLOAT_ID ASSIGN exprF {
         problem = 1;
-        char* errorMes = str("allready declared with other type variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredWithOtherTypeVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 ;
 
@@ -972,13 +993,13 @@ assignmentLI:
 
     | ID ASSIGN SCAN LPAREN RPAREN {
         long int temp = scan_long_int("");
-        if(nan_error) { nanError(); YYABORT; }
+        if(nan_error) { free($1); nanError(); YYABORT; }
         longIntAssignment($1, temp);
     }
 
     | ID ASSIGN SCAN LPAREN exprS RPAREN {
         long int temp = scan_long_int($5);
-        if(nan_error) { free($5); nanError(); YYABORT; }
+        if(nan_error) { free($1); free($5); nanError(); YYABORT; }
         free($5);
         longIntAssignment($1, temp);
     }
@@ -987,18 +1008,14 @@ assignmentLI:
 
     | LONG_INT_ID ASSIGN exprLI {
         problem = 1;
-        char* errorMes = str("allready declared variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 
     | NOT_LONG_INT_ID ASSIGN exprLI {
         problem = 1;
-        char* errorMes = str("allready declared with other type variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredWithOtherTypeVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 ;
 
@@ -1055,19 +1072,18 @@ stmtB:
     }
 
     | BOOL_ID ASSIGN SCAN LPAREN RPAREN {
-        /* int temp;
-        scanf("%d", &temp);
+        int temp = scan_bool("");
+        if(nab_error) { free($1); nabError(); YYABORT; }
         setBool($1, temp);
-        free($1); */
+        free($1);
     }
 
     | BOOL_ID ASSIGN SCAN LPAREN exprS RPAREN {
-        /* int temp;
-        printf("%s", $5);
-        free($5);
-        scanf("%d", &temp);
+        int temp = scan_bool($5);
+        if(nab_error) { free($1); free($5); nabError(); YYABORT; }
         setBool($1, temp);
-        free($1); */
+        free($1);
+        free($5);
     }
 
     | BOOL_ID ASSIGN idAssignmentsB {
@@ -1111,35 +1127,30 @@ assignmentB:
     ID ASSIGN exprB { boolAssignment($1, $3); }
 
     | ID ASSIGN SCAN LPAREN RPAREN {
-        /* int temp;
-        scanf("%d", &temp);
-        boolAssignment($1, temp); */
+        int temp = scan_bool("");
+        if(nab_error) { free($1); nabError(); YYABORT; }
+        boolAssignment($1, temp);
     }
 
     | ID ASSIGN SCAN LPAREN exprS RPAREN {
-        /* int temp;
-        printf("%s", $5);
+        int temp = scan_bool($5);
+        if(nab_error) { free($1); free($5); nabError(); YYABORT; }
         free($5);
-        scanf("%d", &temp);
-        boolAssignment($1, temp); */
+        boolAssignment($1, temp);
     }
 
     | ID { boolAssignment($1, TRUE_VAL); }
 
     | BOOL_ID ASSIGN exprB {
         problem = 1;
-        char* errorMes = str("allready declared variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 
     | NOT_BOOL_ID ASSIGN exprB {
         problem = 1;
-        char* errorMes = str("allready declared with other type variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredWithOtherTypeVarError($1);
         free($1);
-        yyerror(errorMes);
     }
 ;
 
@@ -1195,19 +1206,18 @@ stmtS:
     }
 
     | STRING_ID ASSIGN SCAN LPAREN RPAREN {
-        /* char* temp;
-        scanf("%s", &temp);
+        char* temp = scan_string("");
+        if(nas_error) { free($1); free(temp); nasError(); YYABORT; }
         setString($1, temp);
-        free($1); */
+        free($1);
     }
 
     | STRING_ID ASSIGN SCAN LPAREN exprS RPAREN {
-        /* char* temp;
-        printf("%s", $5);
-        free($5);
-        scanf("%s", &temp);
+        char* temp = scan_string($5);
+        if(nas_error) { free($1); free($5); free(temp); nasError(); YYABORT; }
         setString($1, temp);
-        free($1); */
+        free($1);
+        free($5);
     }
 
     | STRING_ID ASSIGN idAssignmentsS {
@@ -1251,17 +1261,16 @@ assignmentS:
     ID ASSIGN exprS { stringAssignment($1, $3); }
 
     | ID ASSIGN SCAN LPAREN RPAREN {
-        /* char* temp;
-        scanf("%s", &temp);
-        stringAssignment($1, temp); */
+        char* temp = scan_string("");
+        if(nas_error) { free($1); free(temp); nasError(); YYABORT; }
+        stringAssignment($1, temp);
     }
 
     | ID ASSIGN SCAN LPAREN exprS RPAREN {
-        /* char* temp;
-        printf("%s", $5);
+        char* temp = scan_string($5);
+        if(nas_error) { free($1); free($5); free(temp); nasError(); YYABORT; }
         free($5);
-        scanf("%s", &temp);
-        stringAssignment($1, temp); */
+        stringAssignment($1, temp);
     }
 
     | ID {
@@ -1272,20 +1281,16 @@ assignmentS:
 
     | STRING_ID ASSIGN exprS {
         problem = 1;
-        char* errorMes = str("allready declared variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredVarError($1);
         free($1);
         free($3);
-        yyerror(errorMes);
     }
 
     | NOT_STRING_ID ASSIGN exprS {
         problem = 1;
-        char* errorMes = str("allready declared with other type variable ");
-        concat(&errorMes, $1);
+        allreadyDeclaredWithOtherTypeVarError($1);
         free($1);
         free($3);
-        yyerror(errorMes);
     }
 ;
 
@@ -1680,11 +1685,17 @@ exprLI:
         invalidCastingError();
     }
 
-    | exprLI PLUS exprLI { printf("-N%ld\n",$1); printf("-N%ld\n",$3); $$ = longIntAdd($1, $3); }
+    | exprLI PLUS exprLI { $$ = $1 + $3;/* $$ = longIntAdd($1, $3); */ }
 
     | exprLI MINUS exprLI { $$ = $1 - $3; }
 
-    | exprLI MUL exprLI { $$ = $1 * $3; }
+    | exprLI MUL exprLI {
+        /* $$ = 1;
+        printf("$%ld$", $1);
+        LongLongInt num = multiply_long($1, $3);
+        printf("%ld %ld", num.parts[1], num.parts[1]); */
+        $$ = $1 * $3;
+    }
 
     | exprLI DIV exprLI {
         if ($3 != 0) $$ = $1 / $3;

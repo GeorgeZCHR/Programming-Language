@@ -14,7 +14,7 @@ int isNumber(const char* str) {
     int dotCounter = 0;
     if(strcmp(str,"+") == 0 || strcmp(str,"-") == 0 || strcmp(str,".") == 0 || strcmp(str,"\n") == 0) return 0;
     if(*str == '-' || *str == '+') str++;
-    if(*str == '.') dotCounter++;
+    if(*str == '.') { str++; dotCounter++; }
     if(!*str) return 0;
     while(*str) {
         if(!isdigit((unsigned char)*str)) {
@@ -72,14 +72,14 @@ int isBiggerThanLongMin(const char* numStr) {
 int checkInteger(const char* text) {
     if(!isNumber(text)) return NOT_A_NUMBER;
     long int num = atol(text);
-    printf("check %ld\n", num);
-    if(num >= MIN_INT && num <= MAX_INT) {printf("!!!\n");return T_INT;}
+    if(num >= MIN_INT && num <= MAX_INT) return T_INT;
     // I need a function that will take num and check if it's bigger that Long Max or smaller that Long Min
-    int is_bigger_than_min_long_int = text[0] == '-' && isBiggerThanLongMin(text) == 0;
-    int is_smaller_than_max_long_int = text[0] != '-' && isSmallerThanLongMax(text) == 0;
-    if(is_bigger_than_min_long_int && is_smaller_than_max_long_int) {printf("@@@\n");return T_LONG_INT;}
-    if(is_bigger_than_min_long_int) {printf("###\n");return IT_IS_MAX_LONG_INT;}
-    if(is_smaller_than_max_long_int) {printf("$$$\n");return IT_IS_MIN_LONG_INT;}
+    // int is_bigger_than_min_long_int = text[0] == '-' && isBiggerThanLongMin(text) == 0;
+    // int is_smaller_than_max_long_int = text[0] != '-' && isSmallerThanLongMax(text) == 0;
+    // if(is_bigger_than_min_long_int && is_smaller_than_max_long_int) {printf("@@@\n");return T_LONG_INT;}
+    // if(is_bigger_than_min_long_int) {printf("###\n");return IT_IS_MAX_LONG_INT;}
+    // if(is_smaller_than_max_long_int) {printf("$$$\n");return IT_IS_MIN_LONG_INT;}
+    return T_LONG_INT;
 }
 
 long int getLongIntPart(const char* text) {
@@ -131,9 +131,9 @@ float floatDiv(double num1, double num2) { return getFloatPart(num1 / num2); }
 
 float floatPow(double num1, double num2) { return getFloatPart((pow(num1, num2))); }
 
-long int longIntAdd(long int num1, long int num2) {
-    /* long int num1new = getLongIntPartFromLongInt(num1);
-    long int num2new = getLongIntPartFromLongInt(num2); */
+/* long int longIntAdd(long int num1, long int num2) {
+    // long int num1new = getLongIntPartFromLongInt(num1);
+    // long int num2new = getLongIntPartFromLongInt(num2);
     printf("num1new = %ld\n", num1);
     printf("num2new = %ld\n", num2);
     if(num1 >= MAX_LONG_INT/2.0 && num2 >= MAX_LONG_INT/2.0) return MAX_LONG_INT;
@@ -147,4 +147,4 @@ long int longIntSub(long int num1, long int num2) {
     if(num1new >= MAX_LONG_INT/2.0 && num2new >= MAX_LONG_INT/2.0) return MAX_LONG_INT;
     if(num1new <= MIN_LONG_INT/2.0 && num2new <= MIN_LONG_INT/2.0) return MIN_LONG_INT;
     return num1new + num2new;
-}
+} */

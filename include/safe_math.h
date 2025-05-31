@@ -41,6 +41,6 @@ float floatSub(double num1, double num2);
 float floatMul(double num1, double num2);
 float floatDiv(double num1, double num2);
 float floatPow(double num1, double num2);
-long int longIntAdd(long int num1, long int num2);
+//long int longIntAdd(long int num1, long int num2);
 
 #endif
