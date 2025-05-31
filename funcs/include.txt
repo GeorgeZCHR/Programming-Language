@@ -1,3 +1,0 @@
-print("Inside include_test.txt");
-
-print("It works!");

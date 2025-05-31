@@ -425,7 +425,7 @@ stmts:
     | stmtIF
     | stmtWHILE
     | block stmts
-    | includeCode
+    | includeCode SEM stmts
     | spcl
 ;
 
@@ -497,18 +497,16 @@ swap:
 ;
 
 includeCode:
-    INCLUDE exprS {
-        // this is a real mid-rule action!
-        if (!parse_subfile($2)) {
+    INCLUDE LPAREN exprS RPAREN{
+        if (!parse_subfile($3)) {
             char* errorMes = str("file does not exist --- ");
-            concat(&errorMes, $2);
+            concat(&errorMes, $3);
             yyerror(errorMes);
-            free($2);
+            free($3);
             YYABORT;
         }
-        free($2);
+        free($3);
     }
-    stmts
 ;
 
 stmtWHILE:

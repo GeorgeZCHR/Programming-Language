@@ -1,0 +1,3 @@
+print("Inside test.txt\n");
+
+print("It works!\n");
