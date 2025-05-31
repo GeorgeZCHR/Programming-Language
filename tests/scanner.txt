@@ -1,0 +1,101 @@
+// Scanner testing
+
+// Int
+// First way
+print("Type an integer.. ");
+int a1;
+a1 = scan();
+
+// Second way
+print("Type an integer.. ");
+int a2 = scan();
+
+// Third way
+int a3;
+a3 = scan("Give an integer.. ");
+
+// Forth way
+int a4 = scan("Give an integer.. ");
+print int
+
+
+
+// Float
+// First way
+print("Type a float number.. ");
+float b1;
+b1 = scan();
+
+// Second way
+print("Type a float number.. ");
+float b2 = scan();
+
+// Third way
+float b3;
+b3 = scan("Give a float number.. ");
+
+// Forth way
+float b4 = scan("Give a float number.. ");
+print float
+
+
+
+// Long Int
+// First way
+print("Type a long int number.. ");
+long int c1;
+c1 = scan();
+
+// Second way
+print("Type a long int number.. ");
+long int c2 = scan();
+
+// Third way
+long int c3;
+c3 = scan("Give a long int number.. ");
+
+// Forth way
+long int c4 = scan("Give a long int number.. ");
+print long int
+
+
+
+// Bool
+// First way
+print("Type a bool.. ");
+bool d1;
+d1 = scan();
+
+// Second way
+print("Type a bool.. ");
+bool d2 = scan();
+
+// Third way
+bool d3;
+d3 = scan("Give a bool.. ");
+
+// Forth way
+bool d4 = scan("Give a bool.. ");
+print bool
+
+
+
+// String
+// First way
+print("Type a string.. ");
+string e1;
+e1 = scan();
+
+// Second way
+print("Type a string.. ");
+string e2 = scan();
+
+// Third way
+string e3;
+e3 = scan("Give a string.. ");
+
+// Forth way
+string e4 = scan("Give a string.. ");
+print string
+
+exit

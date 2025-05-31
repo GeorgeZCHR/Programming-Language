@@ -1,3 +1,5 @@
-string name = "George";
-print("Hello " + name);
+/*string name = "George";
+print("Hello " + name);*/
+
+long int a = 9223372036854775807 * 9223372036854775807;
 exit

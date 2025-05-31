@@ -16,10 +16,10 @@ char* generateSeparatorPattern(char priSep, char secSep, int len);
 void normalizeWithSeparator(char* str, char priSep, char secSep, int sepPatternLen);
 void equall(char** ptr, const char* text);
 void concat(char** ptr, const char* text);
-char* intToString(int num, char* str);
-char* floatToString(float num, char* str);
-char* longIntToString(long int num, char* str);
-char* boolToString(int num, char* str);
+char* intToString(int num);
+char* floatToString(float num);
+char* longIntToString(long int num);
+char* boolToString(int num);
 char* charToString(const char c);
 
 #endif
